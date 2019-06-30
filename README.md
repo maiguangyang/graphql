@@ -9,6 +9,7 @@ Before you start, please make sure you have `goimports` installed:
 ```
 go get golang.org/x/tools/cmd/goimports
 go mod init xxx
+go get github.com/maiguangyang/graphql
 go mod edit -replace=github.com/satori/go.uuid@v1.2.0=github.com/satori/go.uuid@master
 go mod tidy
 ```
@@ -33,6 +34,10 @@ or without makefile:
 
 ```
 DATABASE_URL=sqlite3://test.db PORT=8080 go run *.go
+
+or
+
+DATABASE_URL=mysql://'root:123456@tcp(192.168.33.10:3306)/graphql?charset=utf8mb4&parseTime=True&loc=Local' go run *.go
 ```
 
 # Example
