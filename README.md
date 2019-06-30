@@ -11,7 +11,7 @@ go get golang.org/x/tools/cmd/goimports
 go mod init xxx
 go get github.com/maiguangyang/graphql
 go mod edit -replace=github.com/satori/go.uuid@v1.2.0=github.com/satori/go.uuid@master
-go mod edit -replace=github.com/maiguangyang/graphql=github.com/maiguangyang/graphql@master
+go get github.com/maiguangyang/graphql@latest
 go mod tidy
 ```
 
