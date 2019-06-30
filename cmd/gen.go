@@ -11,8 +11,8 @@ import (
 
 	"github.com/inloop/goclitools"
 
-	"github.com/novacloudcz/graphql-orm/model"
-	"github.com/novacloudcz/graphql-orm/templates"
+	"github.com/maiguangyang/graphql/model"
+	"github.com/maiguangyang/graphql/templates"
 	"github.com/urfave/cli"
 )
 

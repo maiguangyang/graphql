@@ -5,8 +5,8 @@ var Resolver = `package gen
 import (
 	"context"
 	"time"
-	
-	"github.com/novacloudcz/graphql-orm/resolvers"
+
+	"github.com/maiguangyang/graphql/resolvers"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -68,15 +68,15 @@ func (r *mutationResolver) Create{{.Name}}(ctx context.Context, input map[string
 		return
 	}
 	err = tx.Commit().Error
-	return 
+	return
 }
 func (r *mutationResolver) Update{{.Name}}(ctx context.Context, id string, input map[string]interface{}) (item *{{.Name}}, err error) {
 	item = &{{.Name}}{}
 	tx := r.DB.db.Begin()
-	
+
 	err = resolvers.GetItem(ctx, tx, item, &id)
 	if err != nil {
-		return 
+		return
 	}
 
 	principalID := getPrincipalID(ctx)
@@ -106,18 +106,18 @@ func (r *mutationResolver) Update{{.Name}}(ctx context.Context, id string, input
 		return
 	}
 	err = tx.Commit().Error
-	return 
+	return
 }
 func (r *mutationResolver) Delete{{.Name}}(ctx context.Context, id string) (item *{{.Name}}, err error) {
 	item = &{{.Name}}{}
 	err = resolvers.GetItem(ctx, r.DB.Query(), item, &id)
 	if err != nil {
-		return 
+		return
 	}
 
 	err = r.DB.Query().Delete(item, "id = ?", id).Error
 
-	return 
+	return
 }
 {{end}}
 
@@ -176,7 +176,7 @@ func (r *{{$object.LowerName}}Resolver) {{$relationship.MethodName}}(ctx context
 	}
 	res = &item
 {{end}}
-	return 
+	return
 }
 {{end}}
 {{end}}

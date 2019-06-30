@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/novacloudcz/graphql-orm/templates"
+	"github.com/maiguangyang/graphql/templates"
 
 	"github.com/inloop/goclitools"
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/novacloudcz/graphql-orm/model"
+	"github.com/maiguangyang/graphql/model"
 	"github.com/urfave/cli"
 )
 
@@ -184,7 +184,7 @@ type Task {
 }
 func createMakeFile() error {
 	content := `generate:
-	go run github.com/novacloudcz/graphql-orm
+	go run github.com/maiguangyang/graphql
 
 run:
 	DATABASE_URL=sqlite3://test.db PORT=8080 go run *.go
@@ -204,5 +204,5 @@ func createDockerFile() error {
 }
 
 func runGenerate() error {
-	return goclitools.RunInteractive("go run github.com/novacloudcz/graphql-orm")
+	return goclitools.RunInteractive("go run github.com/maiguangyang/graphql")
 }

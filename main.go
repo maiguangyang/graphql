@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/jinzhu/gorm"
-	"github.com/novacloudcz/graphql-orm/cmd"
+	"github.com/maiguangyang/graphql/cmd"
 )
 
 var db *gorm.DB

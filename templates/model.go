@@ -4,7 +4,7 @@ var Model = `package gen
 
 import (
 	"time"
-	"github.com/novacloudcz/graphql-orm/resolvers"
+	"github.com/maiguangyang/graphql/resolvers"
 )
 
 

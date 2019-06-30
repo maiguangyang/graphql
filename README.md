@@ -16,10 +16,10 @@ go mod tidy
 _NOTE: Make sure you have Go installed on your system._
 
 1. Create new project repository
-1. run `go run github.com/novacloudcz/graphql-orm init`
+1. run `go run github.com/maiguangyang/graphql init`
 1. follow initialization instruction (creating makefile is suggested)
 1. open create `model.graphql` and create your custom model schema
-1. each time you change model, run `make generate` or `go run github.com/novacloudcz/graphql-orm` to recreate generated source codes
+1. each time you change model, run `make generate` or `go run github.com/maiguangyang/graphql` to recreate generated source codes
 
 ## Running locally
 
@@ -37,7 +37,7 @@ DATABASE_URL=sqlite3://test.db PORT=8080 go run *.go
 
 # Example
 
-You can find example project at [graphql-orm-example repo](https://github.com/novacloudcz/graphql-orm-example)
+You can find example project at [graphql-orm-example repo](https://github.com/maiguangyang/graphql-example)
 
 # Schema preview in Voyager
 
@@ -65,7 +65,7 @@ If you generated Dockerfile initialization it's as easy as running:
 docker build -t {IMAGE_NAME} .
 ```
 
-If you want to create your own docker image, you can check the example repository for generated Dockerfile: https://github.com/novacloudcz/graphql-orm-example/blob/master/Dockerfile
+If you want to create your own docker image, you can check the example repository for generated Dockerfile: https://github.com/maiguangyang/graphql-example/blob/master/Dockerfile
 
 # What's this library for?
 
