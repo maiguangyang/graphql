@@ -2,7 +2,7 @@ package model
 
 import (
 	"fmt"
-	"strings"
+	// "strings"
 
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/iancoleman/strcase"
@@ -23,20 +23,20 @@ func (o *ObjectValid) MethodName() string {
 }
 
 func (o *ObjectValid) InverseValidatorName() string {
+	str := ""
 	for _, d := range o.Def.Directives {
 		if d.Name.Value == "validator" {
 			for _, arg := range d.Arguments {
-				if arg.Name.Value == "valid" || arg.Name.Value == "required" {
 					v, ok := arg.Value.GetValue().(string)
-					fmt.Println(v)
+					str += arg.Name.Value + ":" + v + ";"
 					if !ok {
 						panic(fmt.Sprintf("invalid value for %s->%s validator", o.Obj.Name(), o.Name()))
 					}
-					// return v
-				}
 			}
+			return str
 		}
 	}
+
 	panic(fmt.Sprintf("missing validator directive argument for %s->%s validator", o.Obj.Name(), o.Name()))
 }
 
@@ -50,12 +50,8 @@ func (o *ObjectValid) GoType() string {
 	return o.ReturnType()
 }
 
-func (o *ObjectValid) InverseValidator() *ObjectValid {
-	return o.Obj.Validator(o.InverseValidatorName())
-}
-
 func (o *ObjectValid) ModelTags() string {
-	invrel := o.InverseValidator()
-	return fmt.Sprintf(`json:"%s" validator:"valid:%s"`, o.Name(), strings.ToLower(invrel.MethodName()))
+	valid := o.InverseValidatorName()
+	return fmt.Sprintf(`json:"%s" validator:"%s"`, o.Name(), valid)
 }
 
