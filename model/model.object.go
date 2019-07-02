@@ -26,6 +26,7 @@ func (o *Object) LowerName() string {
 func (o *Object) TableName() string {
 	return strcase.ToSnake(inflection.Plural(o.LowerName()))
 }
+
 func (o *Object) Columns() []ObjectColumn {
 	columns := []ObjectColumn{}
 	for _, f := range o.Def.Fields {
@@ -35,6 +36,26 @@ func (o *Object) Columns() []ObjectColumn {
 	}
 	return columns
 }
+
+func (o *Object) Validators() []*ObjectValid {
+	data := []*ObjectValid{}
+	for _, f := range o.Def.Fields {
+		if o.isValidator(f) {
+			data = append(data, &ObjectValid{f, o})
+		}
+	}
+	return data
+}
+
+func (o *Object) Validator(name string) *ObjectValid {
+	for _, rel := range o.Validators() {
+		if rel.Name() == name {
+			return rel
+		}
+	}
+	panic(fmt.Sprintf("validator %s->%s not found", o.Name(), name))
+}
+
 func (o *Object) Relationships() []*ObjectRelationship {
 	relationships := []*ObjectRelationship{}
 	for _, f := range o.Def.Fields {
@@ -59,6 +80,15 @@ func (o *Object) HasRelationships() bool {
 
 func (o *Object) isColumn(f *ast.FieldDefinition) bool {
 	return !o.Model.HasObject(getNamedType(f.Type).(*ast.Named).Name.Value) && !o.isRelationship(f)
+}
+func (o *Object) isValidator(f *ast.FieldDefinition) bool {
+	for _, d := range f.Directives {
+		// fmt.Println(d.Name.Value)
+		if d != nil && d.Name.Value == "validator" {
+			return true
+		}
+	}
+	return false
 }
 func (o *Object) isRelationship(f *ast.FieldDefinition) bool {
 	for _, d := range f.Directives {
