@@ -83,12 +83,42 @@ func (o *ObjectColumn) GoTypeWithPointer(showPointer bool) string {
 	return t
 }
 
+func (o *ObjectColumn) InverseValidatorName() string {
+	str := ""
+	for _, d := range o.Def.Directives {
+		if d.Name.Value == "validator" {
+			for _, arg := range d.Arguments {
+					v, ok := arg.Value.GetValue().(string)
+					if v != "" {
+						str += arg.Name.Value + ":" + v + ";"
+					}
+					if !ok {
+						panic(fmt.Sprintf("invalid value for %s->%s validator", o.Obj.Name(), o.Name()))
+					}
+			}
+		}
+	}
+
+	return str
+
+	// panic(fmt.Sprintf("missing validator directive argument for %s->%s validator", o.Obj.Name(), o.Name()))
+}
+
 func (o *ObjectColumn) ModelTags() string {
 	_gorm := fmt.Sprintf("column:%s", o.Name())
 	if o.Name() == "id" {
 		_gorm += ";primary_key"
 	}
-	return fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), _gorm)
+
+	valid := o.InverseValidatorName()
+
+	if valid == "" {
+		return fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), _gorm)
+
+	}
+
+	return fmt.Sprintf(`json:"%s" gorm:"%s" validator:"%s"`, o.Name(), _gorm, valid)
+
 }
 
 type FilterMappingItem struct {
