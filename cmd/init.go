@@ -161,10 +161,10 @@ func getPrincipalID(req *http.Request) string {
 	return ioutil.WriteFile("main.go", []byte(content), 0644)
 }
 func createDummyModelFile() error {
-	content := `directive @validator(required: Boolean, valid: String!) on FIELD_DEFINITION
+	content := `directive @column(length: Int!, comment: String!, isNull: Boolean, value: String, required: Boolean, valid: String!) on FIELD_DEFINITION
 
 type User {
-	email: String @validator(required: "true", valid: "email")
+	email: String @column(length: 255, comment: "邮箱", isNull: "false", value: "0", required: "true", valid: "email")
 	firstName: String
 	lastName: String
 
