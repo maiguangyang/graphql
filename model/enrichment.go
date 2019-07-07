@@ -15,7 +15,7 @@ func EnrichModelObjects(m *Model) error {
 	id := fieldDefinition("id", "ID", true)
 	createdAt := fieldDefinition("createdAt", "Time", true)
 	updatedAt := fieldDefinition("updatedAt", "Time", false)
-	createdBy := fieldDefinition("createdBy", "ID", true)
+	createdBy := fieldDefinition("createdBy", "ID", false)
 	updatedBy := fieldDefinition("updatedBy", "ID", false)
 
 	for _, o := range m.Objects() {
@@ -42,8 +42,6 @@ func EnrichModel(m *Model) error {
 	schemaHeaderNodes := []ast.Node{
 		scalarDefinition("Time"),
 		relationshipDirectiveDefinition(),
-		validatorDirectiveDefinition(),
-		gormDirectiveDefinition(),
 		schemaDefinition(m),
 		queryDefinition(m),
 		mutationDefinition(m),
@@ -84,47 +82,6 @@ func relationshipDirectiveDefinition() *ast.DirectiveDefinition {
 			&ast.InputValueDefinition{
 				Kind: kinds.InputValueDefinition,
 				Name: nameNode("inverse"),
-				Type: nonNull(namedType("String")),
-			},
-		},
-		Locations: []*ast.Name{
-			nameNode(graphql.DirectiveLocationFieldDefinition),
-		},
-	}
-}
-
-// 字段验证指令
-func validatorDirectiveDefinition() *ast.DirectiveDefinition {
-	return &ast.DirectiveDefinition{
-		Kind: kinds.DirectiveDefinition,
-		Name: nameNode("validator"),
-		Arguments: []*ast.InputValueDefinition{
-			&ast.InputValueDefinition{
-				Kind: kinds.InputValueDefinition,
-				Name: nameNode("required"),
-				Type: nonNull(namedType("Boolean")),
-			},
-			&ast.InputValueDefinition{
-				Kind: kinds.InputValueDefinition,
-				Name: nameNode("tye"),
-				Type: nonNull(namedType("String")),
-			},
-		},
-		Locations: []*ast.Name{
-			nameNode(graphql.DirectiveLocationFieldDefinition),
-		},
-	}
-}
-
-// gorm指令
-func gormDirectiveDefinition() *ast.DirectiveDefinition {
-	return &ast.DirectiveDefinition{
-		Kind: kinds.DirectiveDefinition,
-		Name: nameNode("gorm"),
-		Arguments: []*ast.InputValueDefinition{
-			&ast.InputValueDefinition{
-				Kind: kinds.InputValueDefinition,
-				Name: nameNode("inputs"),
 				Type: nonNull(namedType("String")),
 			},
 		},

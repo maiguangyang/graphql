@@ -83,64 +83,12 @@ func (o *ObjectColumn) GoTypeWithPointer(showPointer bool) string {
 	return t
 }
 
-func (o *ObjectColumn) InverseValidatorName() map[string]string {
-	str := map[string]string{}
-	for _, d := range o.Def.Directives {
-		if d.Name.Value == "column" || d.Name.Value == "validator" {
-			str[d.Name.Value] = ""
-			for _, arg := range d.Arguments {
-					v, ok := arg.Value.GetValue().(string)
-					if v != "" {
-            if arg.Name.Value == "length" {
-              str["gorm"] += `type:varchar(` + v + `) comment `
-            } else if arg.Name.Value == "comment" {
-              str["gorm"] += `'` + v + `';`
-            } else if arg.Name.Value == "isNull" && v == "false" {
-              str["gorm"] += `NOT NULL;`
-            } else if arg.Name.Value == "value" {
-              str["gorm"] += `default:`+ v +`;`
-            } else if arg.Name.Value == "required" && v == "true" {
-              str["validator"] += `required:`+ v +`;`
-            } else if arg.Name.Value == "valid" {
-              str["validator"] += `type:`+ v +`;`
-            }
-
-        //     else {
-						  // str[d.Name.Value] += arg.Name.Value + ":" + v + ";"
-        //     }
-						// str += arg.Name.Value + ":" + v + ";"
-					}
-					if !ok {
-						panic(fmt.Sprintf("invalid value for %s->%s validator", o.Obj.Name(), o.Name()))
-					}
-			}
-		}
-	}
-
-	return str
-
-	// panic(fmt.Sprintf("missing validator directive argument for %s->%s validator", o.Obj.Name(), o.Name()))
-}
-
 func (o *ObjectColumn) ModelTags() string {
 	_gorm := fmt.Sprintf("column:%s", o.Name())
 	if o.Name() == "id" {
 		_gorm += ";primary_key"
 	}
-
-  valid := o.InverseValidatorName()
-
-  str := fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), _gorm)
-
-  if len(valid["gorm"]) > 0 {
-    str = fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), valid["gorm"])
-  }
-
-  if len(valid["validator"]) > 0 {
-    str = fmt.Sprintf(`json:"%s" gorm:"%s" validator:"%s"`, o.Name(), valid["gorm"], valid["validator"])
-  }
-
-  return str
+	return fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), _gorm)
 }
 
 type FilterMappingItem struct {

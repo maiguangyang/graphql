@@ -37,6 +37,12 @@ var initCmd = cli.Command{
 			return cli.NewExitError(err, 1)
 		}
 
+		if !fileExists("resolver.go") {
+			if err := createResolverFile(); err != nil {
+				return cli.NewExitError(err, 1)
+			}
+		}
+
 		if !fileExists("makefile") {
 			wantCreateMakefile := goclitools.Prompt("Create makefile for run/generate commands? [y/N]")
 			if strings.ToLower(wantCreateMakefile) == "y" {
@@ -104,6 +110,8 @@ import (
 	"os"
 
 	"github.com/99designs/gqlgen/handler"
+	"github.com/maiguangyang/graphql/events"
+	// "github.com/rs/cors"
 	"%s/gen"
 )
 
@@ -112,6 +120,8 @@ const (
 )
 
 func main() {
+	mux := http.NewServeMux()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
@@ -126,9 +136,15 @@ func main() {
 	defer db.Close()
 	db.AutoMigrate()
 
-	gqlHandler := handler.GraphQL(gen.NewExecutableSchema(gen.Config{Resolvers: &gen.Resolver{DB: db}}))
+	eventController, err := events.NewEventController()
+	if err != nil {
+		panic(err)
+	}
+
+	gqlHandler := handler.GraphQL(gen.NewExecutableSchema(gen.Config{Resolvers: NewResolver(db, &eventController)}))
+
 	playgroundHandler := handler.Playground("GraphQL playground", "/graphql")
-	http.HandleFunc("/graphql", func(res http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/graphql", func(res http.ResponseWriter, req *http.Request) {
 		principalID := getPrincipalID(req)
 		ctx := context.WithValue(req.Context(), gen.KeyPrincipalID, principalID)
 		req = req.WithContext(ctx)
@@ -139,7 +155,7 @@ func main() {
 		}
 	})
 
-	http.HandleFunc("/healthcheck", func(res http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/healthcheck", func(res http.ResponseWriter, req *http.Request) {
 		if err := db.Ping(); err != nil {
 			res.WriteHeader(400)
 			res.Write([]byte("ERROR"))
@@ -149,22 +165,27 @@ func main() {
 		res.Write([]byte("OK"))
 	})
 
-	log.Printf("connect to http://localhost:%s/graphql for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	handler := mux
+	// use this line to allow cors for all origins/methods/headers (for development)
+	// handler := cors.AllowAll().Handler(mux)
+
+	log.Printf("connect to http://localhost:%%s/graphql for GraphQL playground", port)
+	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
 
-func getPrincipalID(req *http.Request) string {
-	return req.Header.Get("principal-id")
+func getPrincipalID(req *http.Request) *string {
+	pID := req.Header.Get("principal-id")
+	if pID == "" {
+		return nil
+	}
+	return &pID
 }
-
 `, c.Package)
 	return ioutil.WriteFile("main.go", []byte(content), 0644)
 }
 func createDummyModelFile() error {
-	content := `directive @column(length: Int!, comment: String!, isNull: Boolean, value: String, required: Boolean, valid: String!) on FIELD_DEFINITION
-
-type User {
-	email: String @column(length: 255, comment: "邮箱", isNull: "false", value: "0", required: "true", valid: "email")
+	content := `type User {
+	email: String
 	firstName: String
 	lastName: String
 
@@ -190,7 +211,7 @@ func createMakeFile() error {
 	go run github.com/maiguangyang/graphql
 
 run:
-	DATABASE_URL=mysql://'root:123456@tcp(192.168.33.10:3306)/graphql?charset=utf8mb4&parseTime=True&loc=Local' go run *.go
+	DATABASE_URL=sqlite3://test.db PORT=8080 go run *.go
 
 voyager:
 	docker run --rm -v ` + "`" + `pwd` + "`" + `/gen/schema.graphql:/app/schema.graphql -p 8080:80 graphql/voyager
@@ -204,6 +225,50 @@ func createDockerFile() error {
 	}
 	data := TemplateData{nil, &c}
 	return writeTemplate(templates.Dockerfile, "Dockerfile", data)
+}
+
+func createResolverFile() error {
+	c, err := model.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	content := fmt.Sprintf(`package main
+
+	import (
+		"%s/gen"
+		"github.com/maiguangyang/graphql/events"
+	)
+
+	type Resolver struct {
+		*gen.GeneratedResolver
+	}
+
+	func NewResolver(db *gen.DB, ec *events.EventController) *Resolver {
+		return &Resolver{&gen.GeneratedResolver{db, ec}}
+	}
+
+	// This is example how to override default resolver to provide customizations
+
+	// 1) Create resolver for specific part of the query (mutation, query, result types etc.)
+	// type MutationResolver struct{ *gen.GeneratedMutationResolver }
+
+	// 2) Override Resolver method for returning your own resolver
+	// func (r *Resolver) Mutation() gen.MutationResolver {
+	// 	return &MutationResolver{&gen.GeneratedMutationResolver{r.GeneratedResolver}}
+	// }
+
+	// 3) Implement custom logic for your resolver
+	// Replace XXX with your entity name (you can find definition of these methods in generated resolvers)
+	// func (r *MutationResolver) CreateXXX(ctx context.Context, input map[string]interface{}) (item *gen.Company, err error) {
+	//	// example call of your own logic
+	//  if err := validateCreateXXXInput(input); err != nil {
+	// 		return nil, err
+	//	}
+	// 	return r.GeneratedMutationResolver.CreateXXX(ctx, input)
+	// }
+`, c.Package)
+	return ioutil.WriteFile("resolver.go", []byte(content), 0644)
 }
 
 func runGenerate() error {
