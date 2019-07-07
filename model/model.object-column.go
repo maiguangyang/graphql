@@ -49,10 +49,10 @@ func (o *ObjectColumn) TargetType() string {
 	return nt.Name.Value
 }
 func (o *ObjectColumn) IsCreatable() bool {
-	return !(o.Name() == "createdAt" || o.Name() == "updatedAt" || o.Name() == "createdBy" || o.Name() == "updatedBy")
+	return !(o.Name() == "createdAt" || o.Name() == "updatedAt" || o.Name() == "deletedAt" || o.Name() == "createdBy" || o.Name() == "updatedBy" || o.Name() == "deletedBy")
 }
 func (o *ObjectColumn) IsUpdatable() bool {
-	return !(o.Name() == "id" || o.Name() == "createdAt" || o.Name() == "updatedAt" || o.Name() == "createdBy" || o.Name() == "updatedBy")
+	return !(o.Name() == "id" || o.Name() == "createdAt" || o.Name() == "updatedAt" || o.Name() == "deletedAt" || o.Name() == "createdBy" || o.Name() == "updatedBy" || o.Name() == "deletedBy")
 }
 func (o *ObjectColumn) IsOptional() bool {
 	return o.Def.Type.GetKind() != "NonNull"
@@ -83,12 +83,54 @@ func (o *ObjectColumn) GoTypeWithPointer(showPointer bool) string {
 	return t
 }
 
+func (o *ObjectColumn) InverseValidatorName() map[string]string {
+	str := map[string]string{}
+	for _, d := range o.Def.Directives {
+		if d.Name.Value == "column" || d.Name.Value == "validator" {
+			str[d.Name.Value] = ""
+			for _, arg := range d.Arguments {
+					v, ok := arg.Value.GetValue().(string)
+					if v != "" {
+            if arg.Name.Value == "gorm" {
+              str["gorm"] += v
+            } else if arg.Name.Value == "required" && v == "true" {
+              str["validator"] += `required:`+ v +`;`
+            } else if arg.Name.Value == "tye" {
+              str["validator"] += `type:`+ v +`;`
+            }
+					}
+					if !ok {
+						panic(fmt.Sprintf("invalid value for %s->%s validator", o.Obj.Name(), o.Name()))
+					}
+			}
+		}
+	}
+
+	return str
+
+}
+
 func (o *ObjectColumn) ModelTags() string {
 	_gorm := fmt.Sprintf("column:%s", o.Name())
 	if o.Name() == "id" {
 		_gorm += ";primary_key"
 	}
-	return fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), _gorm)
+
+  valid := o.InverseValidatorName()
+
+  str := fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), _gorm)
+
+  if len(valid["gorm"]) > 0 {
+    str = fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), valid["gorm"])
+  }
+
+  if len(valid["validator"]) > 0 {
+    str = fmt.Sprintf(`json:"%s" gorm:"%s" validator:"%s"`, o.Name(), valid["gorm"], valid["validator"])
+  }
+
+  return str
+
+	// return fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), _gorm)
 }
 
 type FilterMappingItem struct {

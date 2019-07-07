@@ -22,6 +22,7 @@ type DB struct {
 // NewDB ...
 func NewDB(db *gorm.DB) *DB {
 	v := DB{db}
+	InitGorm(db)
 	return &v
 }
 

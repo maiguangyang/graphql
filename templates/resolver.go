@@ -43,14 +43,14 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 func (r *GeneratedMutationResolver) Create{{.Name}}(ctx context.Context, input map[string]interface{}) (item *{{.Name}}, err error) {
 	principalID := getPrincipalID(ctx)
 	now := time.Now()
-	item = &{{.Name}}{ID: uuid.Must(uuid.NewV4()).String(), CreatedAt: now, CreatedBy: principalID}
+	item = &{{.Name}}{ID: uuid.Must(uuid.NewV4()).String(), CreatedAt: now.Unix(), CreatedBy: principalID}
 	tx := r.DB.db.Begin()
 
 	event := events.NewEvent(events.EventMetadata{
 		Type:        events.EventTypeCreated,
 		Entity:      "{{.Name}}",
 		EntityID:    item.ID,
-		Date:        now,
+		Date:        now.Unix(),
 		PrincipalID: principalID,
 	})
 
@@ -106,7 +106,7 @@ func (r *GeneratedMutationResolver) Update{{.Name}}(ctx context.Context, id stri
 		Type:        events.EventTypeCreated,
 		Entity:      "{{.Name}}",
 		EntityID:    item.ID,
-		Date:        now,
+		Date:        now.Unix(),
 		PrincipalID: principalID,
 	})
 
@@ -163,13 +163,29 @@ func (r *GeneratedMutationResolver) Update{{.Name}}(ctx context.Context, id stri
 	return
 }
 func (r *GeneratedMutationResolver) Delete{{.Name}}(ctx context.Context, id string) (item *{{.Name}}, err error) {
+	principalID := getPrincipalID(ctx)
 	item = &{{.Name}}{}
-	err = resolvers.GetItem(ctx, r.DB.Query(), item, &id)
+	tx := r.DB.db.Begin()
+
+	err = resolvers.GetItem(ctx, tx, item, &id)
 	if err != nil {
 		return
 	}
 
-	err = r.DB.Query().Delete(item, "id = ?", id).Error
+	// err = r.DB.Query().Delete(item, "id = ?", id).Error
+
+	item.DeletedBy = principalID
+
+	err = tx.Delete(item).Error
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+	err = tx.Commit().Error
+	if err != nil {
+		tx.Rollback()
+		return
+	}
 
 	return
 }

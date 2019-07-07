@@ -1,8 +1,6 @@
 package events
 
 import (
-	"time"
-
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -32,7 +30,7 @@ type EventMetadata struct {
 	Cursor      string    `json:"cursor"`
 	Entity      string    `json:"entity"`
 	EntityID    string    `json:"entityId"`
-	Date        time.Time `json:"date"`
+	Date        int64     `json:"date"`
 	PrincipalID *string   `json:"principalId"`
 }
 
