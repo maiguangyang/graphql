@@ -13,7 +13,7 @@ import (
 // EnrichModelObjects ...
 func EnrichModelObjects(m *Model) error {
 	id := fieldDefinition("id", "ID", true)
-	createdAt := fieldDefinition("createdAt", "Int", true)
+	createdAt := fieldDefinition("createdAt", "Int", false)
 	updatedAt := fieldDefinition("updatedAt", "Int", false)
 	deletedAt := fieldDefinition("deletedAt", "Int", false)
 	createdBy := fieldDefinition("createdBy", "ID", false)

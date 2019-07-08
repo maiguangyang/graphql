@@ -43,7 +43,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 func (r *GeneratedMutationResolver) Create{{.Name}}(ctx context.Context, input map[string]interface{}) (item *{{.Name}}, err error) {
 	principalID := getPrincipalID(ctx)
 	now := time.Now()
-	item = &{{.Name}}{ID: uuid.Must(uuid.NewV4()).String(), CreatedAt: now.Unix(), CreatedBy: principalID}
+	item = &{{.Name}}{ID: uuid.Must(uuid.NewV4()).String(), CreatedBy: principalID}
 	tx := r.DB.db.Begin()
 
 	event := events.NewEvent(events.EventMetadata{
