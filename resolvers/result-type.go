@@ -127,14 +127,6 @@ func (r *EntityResultType) GetCount(ctx context.Context, db *gorm.DB, out interf
 	values := []interface{}{}
 	joins := []string{}
 
-	// 麦广扬添加
-	selects := getFieldsRequested(ctx)
-	if len(selects) > 0 {
-		q = q.Select(selects)
-	}
-
-	// 原来的
-
 	err = r.Query.Apply(ctx, dialect, &wheres, &values, &joins)
 	if err != nil {
 		return 0, err
