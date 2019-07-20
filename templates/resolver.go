@@ -5,6 +5,7 @@ var Resolver = `package gen
 import (
 	"context"
 	"time"
+	"strings"
 
 	"github.com/maiguangyang/graphql/resolvers"
 	uuid "github.com/satori/go.uuid"
@@ -182,10 +183,14 @@ func (r *GeneratedQueryResolver) {{$object.Name}}(ctx context.Context, id *strin
 	query := {{$object.Name}}QueryFilter{q}
 	offset := 0
 	limit := 1
+	current_page := 0
+	per_page := 0
 	rt := &{{$object.Name}}ResultType{
 		EntityResultType: resolvers.EntityResultType{
 			Offset: &offset,
 			Limit:  &limit,
+			CurrentPage: &current_page,
+			PerPage:  &per_page,
 			Query:  &query,
 			Filter: filter,
 		},
@@ -205,7 +210,7 @@ func (r *GeneratedQueryResolver) {{$object.Name}}(ctx context.Context, id *strin
 	}
 	return items[0], err
 }
-func (r *GeneratedQueryResolver) {{$object.PluralName}}(ctx context.Context, offset *int, limit *int, q *string, sort []{{$object.Name}}SortType, filter *{{$object.Name}}FilterType) (*{{$object.Name}}ResultType, error) {
+func (r *GeneratedQueryResolver) {{$object.PluralName}}(ctx context.Context, offset *int, limit *int, current_page *int, per_page *int, q *string, sort []{{$object.Name}}SortType, filter *{{$object.Name}}FilterType) (*{{$object.Name}}ResultType, error) {
 	_sort := []resolvers.EntitySort{}
 	for _, s := range sort {
 		_sort = append(_sort, s)
@@ -215,6 +220,8 @@ func (r *GeneratedQueryResolver) {{$object.PluralName}}(ctx context.Context, off
 		EntityResultType: resolvers.EntityResultType{
 			Offset: offset,
 			Limit:  limit,
+			CurrentPage: current_page,
+			PerPage:  per_page,
 			Query:  &query,
 			Sort: _sort,
 			Filter: filter,
@@ -251,7 +258,7 @@ type Generated{{$object.Name}}Resolver struct { *GeneratedResolver }
 {{range $index, $relationship := .Relationships}}
 func (r *Generated{{$object.Name}}Resolver) {{$relationship.MethodName}}(ctx context.Context, obj *{{$object.Name}}) (res {{.ReturnType}}, err error) {
 {{if $relationship.IsToMany}}
-	selects := resolvers.GetFieldsRequested(ctx)
+	selects := resolvers.GetFieldsRequested(ctx, strings.ToLower("{{$relationship.MethodName}}"))
 
 	items := []*{{.TargetType}}{}
 	err = r.DB.Query().Select(selects).Model(obj).Related(&items, "{{$relationship.MethodName}}").Error

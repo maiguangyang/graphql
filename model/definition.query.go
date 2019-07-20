@@ -69,6 +69,20 @@ func listFieldDefinition(obj Object) *ast.FieldDefinition {
 				DefaultValue: &ast.IntValue{Kind: kinds.IntValue, Value: "30"},
 				Type:         namedType("Int"),
 			},
+
+			&ast.InputValueDefinition{
+				Kind: kinds.InputValueDefinition,
+				Name: nameNode("current_page"),
+				DefaultValue: &ast.IntValue{Kind: kinds.IntValue, Value: "1"},
+				Type: namedType("Int"),
+			},
+			&ast.InputValueDefinition{
+				Kind:         kinds.InputValueDefinition,
+				Name:         nameNode("per_page"),
+				DefaultValue: &ast.IntValue{Kind: kinds.IntValue, Value: "30"},
+				Type:         namedType("Int"),
+			},
+
 			&ast.InputValueDefinition{
 				Kind: kinds.InputValueDefinition,
 				Name: nameNode("q"),

@@ -24,26 +24,28 @@ type EntitySort interface {
 type EntityResultType struct {
 	Offset *int
 	Limit  *int
+	CurrentPage *int
+	PerPage  *int
 	Query  EntityFilterQuery
 	Sort   []EntitySort
 	Filter EntityFilter
 }
 
 // maiguangyang new add
-func GetFieldsRequested(ctx context.Context) []string {
+func GetFieldsRequested(ctx context.Context, alias string) []string {
 	reqCtx := graphql.GetRequestContext(ctx)
 	fieldSelections := graphql.GetResolverContext(ctx).Field.Selections
-	return recurseSelectionSets(reqCtx, []string{}, fieldSelections)
+	return recurseSelectionSets(reqCtx, []string{}, fieldSelections, alias)
 }
 
 // maiguangyang new add
-func recurseSelectionSets(reqCtx *graphql.RequestContext, fields []string, selection ast.SelectionSet) []string {
+func recurseSelectionSets(reqCtx *graphql.RequestContext, fields []string, selection ast.SelectionSet, alias string) []string {
 	for _, sel := range selection {
 		switch sel := sel.(type) {
 		case *ast.Field:
 			// ignore private field names
 			if !strings.HasPrefix(sel.Name, "__") && len(sel.SelectionSet) == 0 {
-				fields = append(fields, sel.Name)
+				fields = append(fields, alias + "." + sel.Name)
 			}
 		// case *ast.InlineFragment:
 		// 	fields = recurseSelectionSets(reqCtx, fields, sel.SelectionSet)
@@ -62,7 +64,8 @@ func (r *EntityResultType) GetItems(ctx context.Context, db *gorm.DB, alias stri
 	q := db
 
 	// 麦广扬添加
-	selects := GetFieldsRequested(ctx)
+	selects := GetFieldsRequested(ctx, alias)
+
 	if len(selects) > 0 {
 		q = q.Select(selects)
 	}
@@ -102,7 +105,7 @@ func (r *EntityResultType) GetItems(ctx context.Context, db *gorm.DB, alias stri
 		}
 	}
 
-	if len(wheres) > 0 {
+	if len(wheres) > 0 && len(values) > 0 {
 		q = q.Where(strings.Join(wheres, " AND "), values...)
 	}
 
@@ -140,7 +143,7 @@ func (r *EntityResultType) GetCount(ctx context.Context, db *gorm.DB, out interf
 		}
 	}
 
-	if len(wheres) > 0 {
+	if len(wheres) > 0 && len(values) > 0 {
 		q = q.Where(strings.Join(wheres, " AND "), values...)
 	}
 
