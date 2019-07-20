@@ -30,7 +30,7 @@ type EntityResultType struct {
 }
 
 // maiguangyang new add
-func getFieldsRequested(ctx context.Context) []string {
+func GetFieldsRequested(ctx context.Context) []string {
 	reqCtx := graphql.GetRequestContext(ctx)
 	fieldSelections := graphql.GetResolverContext(ctx).Field.Selections
 	return recurseSelectionSets(reqCtx, []string{}, fieldSelections)
@@ -42,14 +42,15 @@ func recurseSelectionSets(reqCtx *graphql.RequestContext, fields []string, selec
 		switch sel := sel.(type) {
 		case *ast.Field:
 			// ignore private field names
-			if !strings.HasPrefix(sel.Name, "__") {
+			if !strings.HasPrefix(sel.Name, "__") && len(sel.SelectionSet) == 0 {
 				fields = append(fields, sel.Name)
 			}
-		case *ast.InlineFragment:
-			fields = recurseSelectionSets(reqCtx, fields, sel.SelectionSet)
-		case *ast.FragmentSpread:
-			fragment := reqCtx.Doc.Fragments.ForName(sel.Name)
-			fields = recurseSelectionSets(reqCtx, fields, fragment.SelectionSet)
+		// case *ast.InlineFragment:
+		// 	fields = recurseSelectionSets(reqCtx, fields, sel.SelectionSet)
+		// case *ast.FragmentSpread:
+
+		// 	fragment := reqCtx.Doc.Fragments.ForName(sel.Name)
+		// 	fields = recurseSelectionSets(reqCtx, fields, fragment.SelectionSet)
 		}
 	}
 	return fields
@@ -61,7 +62,7 @@ func (r *EntityResultType) GetItems(ctx context.Context, db *gorm.DB, alias stri
 	q := db
 
 	// 麦广扬添加
-	selects := getFieldsRequested(ctx)
+	selects := GetFieldsRequested(ctx)
 	if len(selects) > 0 {
 		q = q.Select(selects)
 	}

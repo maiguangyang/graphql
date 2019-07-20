@@ -239,8 +239,10 @@ type Generated{{$object.Name}}Resolver struct { *GeneratedResolver }
 {{range $index, $relationship := .Relationships}}
 func (r *Generated{{$object.Name}}Resolver) {{$relationship.MethodName}}(ctx context.Context, obj *{{$object.Name}}) (res {{.ReturnType}}, err error) {
 {{if $relationship.IsToMany}}
+	selects := resolvers.GetFieldsRequested(ctx)
+
 	items := []*{{.TargetType}}{}
-	err = r.DB.Query().Model(obj).Related(&items, "{{$relationship.MethodName}}").Error
+	err = r.DB.Query().Select(selects).Model(obj).Related(&items, "{{$relationship.MethodName}}").Error
 	res = items
 {{else}}
 	item := {{.TargetType}}{}
