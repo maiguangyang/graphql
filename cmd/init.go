@@ -108,9 +108,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/99designs/gqlgen/handler"
 	"github.com/maiguangyang/graphql/events"
+	jwtgo "github.com/dgrijalva/jwt-go"
+	"github.com/gbrlsnchs/jwt"
 	// "github.com/rs/cors"
 	"%s/gen"
 )
@@ -173,12 +176,47 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
 
+func getPrincipalIDFromContext(ctx context.Context) *string {
+	v, _ := ctx.Value(gen.KeyPrincipalID).(*string)
+	return v
+}
+func getJWTClaimsFromContext(ctx context.Context) *JWTClaims {
+	v, _ := ctx.Value(gen.KeyJWTClaims).(*JWTClaims)
+	return v
+}
+
 func getPrincipalID(req *http.Request) *string {
 	pID := req.Header.Get("principal-id")
-	if pID == "" {
+	if pID != "" {
+		return &pID
+	}
+	c, _ := getJWTClaims(req)
+	if c == nil {
 		return nil
 	}
-	return &pID
+	return &c.Subject
+}
+
+type JWTClaims struct {
+	jwtgo.StandardClaims
+	Scope *string
+}
+
+func getJWTClaims(req *http.Request) (*JWTClaims, error) {
+	var p *JWTClaims
+
+	tokenStr := strings.Replace(req.Header.Get("authorization"), "Bearer ", "", 1)
+	if tokenStr == "" {
+		return p, nil
+	}
+
+	token, err := jwt.Parse([]byte(tokenStr))
+	if err != nil {
+		return p, err
+	}
+	p = &JWTClaims{}
+	_, err = token.Decode(p)
+	return p, err
 }
 `, c.Package)
 	return ioutil.WriteFile("main.go", []byte(content), 0644)

@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/graphql/language/kinds"
 
 	"github.com/graphql-go/graphql/language/ast"
@@ -29,6 +28,7 @@ func EnrichModelObjects(m *Model) error {
 		}
 		o.Def.Fields = append(o.Def.Fields, deletedAt, updatedAt, createdAt, deletedBy, updatedBy, createdBy)
 	}
+
 	return nil
 }
 
@@ -43,7 +43,6 @@ func EnrichModel(m *Model) error {
 
 	schemaHeaderNodes := []ast.Node{
 		scalarDefinition("Time"),
-		relationshipDirectiveDefinition(),
 		schemaDefinition(m),
 		queryDefinition(m),
 		mutationDefinition(m),
@@ -69,27 +68,11 @@ func fieldDefinition(fieldName, fieldType string, isNonNull bool) *ast.FieldDefi
 	if isNonNull {
 		t = nonNull(t)
 	}
+
 	return &ast.FieldDefinition{
 		Name: nameNode(fieldName),
 		Kind: kinds.FieldDefinition,
 		Type: t,
-	}
-}
-
-func relationshipDirectiveDefinition() *ast.DirectiveDefinition {
-	return &ast.DirectiveDefinition{
-		Kind: kinds.DirectiveDefinition,
-		Name: nameNode("relationship"),
-		Arguments: []*ast.InputValueDefinition{
-			&ast.InputValueDefinition{
-				Kind: kinds.InputValueDefinition,
-				Name: nameNode("inverse"),
-				Type: nonNull(namedType("String")),
-			},
-		},
-		Locations: []*ast.Name{
-			nameNode(graphql.DirectiveLocationFieldDefinition),
-		},
 	}
 }
 

@@ -83,54 +83,51 @@ func (o *ObjectColumn) GoTypeWithPointer(showPointer bool) string {
 	return t
 }
 
-func (o *ObjectColumn) InverseValidatorName() map[string]string {
-	str := map[string]string{}
+
+// 查找数组并返回下标
+func IndexOf(str []interface{}, data interface{}) int {
+  for k, v := range str{
+    if v == data {
+      return k
+    }
+  }
+
+  return - 1
+}
+
+func (o *ObjectColumn) ModelTags() string {
+	_gorm := fmt.Sprintf("column:%s;null;default:null", o.Name())
+	dateArr := []interface{}{"createdAt", "updatedAt", "deletedAt"}
+
+	if o.Name() == "id" {
+		_gorm = "type:varchar(36) comment 'uuid';primary_key;NOT NULL;"
+	}
+
+	if IndexOf(dateArr, o.Name()) != -1 {
+    comment := ""
+    switch o.Name() {
+      case "createdAt":
+        comment = "创建时间"
+      case "updatedAt":
+        comment = "更新时间"
+      case "deletedAt":
+        comment = "删除时间"
+    }
+
+    _gorm = fmt.Sprintf("type:int(11) comment '%s';null;default:null", comment)
+	}
+
 	for _, d := range o.Def.Directives {
-		if d.Name.Value == "column" || d.Name.Value == "validator" {
-			str[d.Name.Value] = ""
+		if d.Name.Value == "column" {
 			for _, arg := range d.Arguments {
-					v, ok := arg.Value.GetValue().(string)
-					if v != "" {
-            if arg.Name.Value == "gorm" {
-              str["gorm"] += v
-            } else if arg.Name.Value == "required" && v == "true" {
-              str["validator"] += `required:`+ v +`;`
-            } else if arg.Name.Value == "tye" {
-              str["validator"] += `type:`+ v +`;`
-            }
-					}
-					if !ok {
-						panic(fmt.Sprintf("invalid value for %s->%s validator", o.Obj.Name(), o.Name()))
-					}
+				if arg.Name.Value == "gorm" {
+					_gorm = fmt.Sprintf("%v", arg.Value.GetValue())
+				}
 			}
 		}
 	}
 
-	return str
-
-}
-
-func (o *ObjectColumn) ModelTags() string {
-	_gorm := fmt.Sprintf("column:%s", o.Name())
-	if o.Name() == "id" {
-		_gorm += ";primary_key"
-	}
-
-  valid := o.InverseValidatorName()
-
-  str := fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), _gorm)
-
-  if len(valid["gorm"]) > 0 {
-    str = fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), valid["gorm"])
-  }
-
-  if len(valid["validator"]) > 0 {
-    str = fmt.Sprintf(`json:"%s" gorm:"%s" validator:"%s"`, o.Name(), valid["gorm"], valid["validator"])
-  }
-
-  return str
-
-	// return fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), _gorm)
+	return fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), _gorm)
 }
 
 type FilterMappingItem struct {

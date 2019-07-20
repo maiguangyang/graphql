@@ -21,6 +21,12 @@ type DB struct {
 
 // NewDB ...
 func NewDB(db *gorm.DB) *DB {
+	prefix := os.Getenv("TABLE_NAME_PREFIX")
+	if prefix != "" {
+		gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
+			return prefix + "_" + defaultTableName
+		}
+	}
 	v := DB{db}
 	InitGorm(db)
 	return &v
@@ -39,6 +45,8 @@ func NewDBWithString(urlString string) *DB {
 	if err != nil {
 		panic(err)
 	}
+	db.DB().SetMaxIdleConns({{.Config.MaxIdleConnections}})
+	db.DB().SetMaxOpenConns({{.Config.MaxOpenConnections}})
 	db.LogMode(true)
 	return NewDB(db)
 }
@@ -49,6 +57,7 @@ func getConnectionString(u *url.URL) string {
 		host := strings.Split(u.Host, ":")[0]
 		return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", host, u.Port(), u.User.Username(), password, strings.TrimPrefix(u.Path, "/"))
 	}
+
 	return strings.Replace(u.String(), u.Scheme+"://", "", 1)
 }
 
