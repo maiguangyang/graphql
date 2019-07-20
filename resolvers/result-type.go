@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/vektah/gqlparser/ast"
 	"github.com/iancoleman/strcase"
 
 	"github.com/jinzhu/gorm"
@@ -27,10 +29,44 @@ type EntityResultType struct {
 	Filter EntityFilter
 }
 
+// maiguangyang new add
+func getFieldsRequested(ctx context.Context) []string {
+	reqCtx := graphql.GetRequestContext(ctx)
+	fieldSelections := graphql.GetResolverContext(ctx).Field.Selections
+	return recurseSelectionSets(reqCtx, []string{}, fieldSelections)
+}
+
+// maiguangyang new add
+func recurseSelectionSets(reqCtx *graphql.RequestContext, fields []string, selection ast.SelectionSet) []string {
+	for _, sel := range selection {
+		switch sel := sel.(type) {
+		case *ast.Field:
+			// ignore private field names
+			if !strings.HasPrefix(sel.Name, "__") {
+				fields = append(fields, sel.Name)
+			}
+		case *ast.InlineFragment:
+			fields = recurseSelectionSets(reqCtx, fields, sel.SelectionSet)
+		case *ast.FragmentSpread:
+			fragment := reqCtx.Doc.Fragments.ForName(sel.Name)
+			fields = recurseSelectionSets(reqCtx, fields, fragment.SelectionSet)
+		}
+	}
+	return fields
+}
+
+
 // GetResultTypeItems ...
 func (r *EntityResultType) GetItems(ctx context.Context, db *gorm.DB, alias string, out interface{}) error {
 	q := db
 
+	// 麦广扬添加
+	selects := getFieldsRequested(ctx)
+	if len(selects) > 0 {
+		q = q.Select(selects)
+	}
+
+	// 原来的
 	if r.Limit != nil {
 		q = q.Limit(*r.Limit)
 	}
@@ -90,6 +126,14 @@ func (r *EntityResultType) GetCount(ctx context.Context, db *gorm.DB, out interf
 	wheres := []string{}
 	values := []interface{}{}
 	joins := []string{}
+
+	// 麦广扬添加
+	selects := getFieldsRequested(ctx)
+	if len(selects) > 0 {
+		q = q.Select(selects)
+	}
+
+	// 原来的
 
 	err = r.Query.Apply(ctx, dialect, &wheres, &values, &joins)
 	if err != nil {
