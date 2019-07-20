@@ -20,9 +20,15 @@ models:
   {{.Name}}ResultType:
     model: {{$config.Package}}/gen.{{.Name}}ResultType
     fields:
-      count:
+      total:
         resolver: true
-      items:
+      current_page:
+        resolver: true
+      per_page:
+        resolver: true
+      total_page:
+        resolver: true
+      data:
         resolver: true
   {{.Name}}:
     model: {{$config.Package}}/gen.{{.Name}}

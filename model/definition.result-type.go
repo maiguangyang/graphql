@@ -13,7 +13,7 @@ func objectResultTypeDefinition(o *Object) *ast.ObjectDefinition {
 		Fields: []*ast.FieldDefinition{
 			&ast.FieldDefinition{
 				Kind: kinds.FieldDefinition,
-				Name: nameNode("items"),
+				Name: nameNode("data"),
 				Type: nonNull(&ast.List{
 					Kind: kinds.List,
 					Type: nonNull(namedType(o.Name())),
@@ -21,7 +21,22 @@ func objectResultTypeDefinition(o *Object) *ast.ObjectDefinition {
 			},
 			&ast.FieldDefinition{
 				Kind: kinds.FieldDefinition,
-				Name: nameNode("count"),
+				Name: nameNode("total"),
+				Type: nonNull(namedType("Int")),
+			},
+			&ast.FieldDefinition{
+				Kind: kinds.FieldDefinition,
+				Name: nameNode("current_page"),
+				Type: nonNull(namedType("Int")),
+			},
+			&ast.FieldDefinition{
+				Kind: kinds.FieldDefinition,
+				Name: nameNode("per_page"),
+				Type: nonNull(namedType("Int")),
+			},
+			&ast.FieldDefinition{
+				Kind: kinds.FieldDefinition,
+				Name: nameNode("total_page"),
 				Type: nonNull(namedType("Int")),
 			},
 		},

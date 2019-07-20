@@ -224,12 +224,24 @@ func (r *GeneratedQueryResolver) {{$object.PluralName}}(ctx context.Context, off
 
 type Generated{{$object.Name}}ResultTypeResolver struct{ *GeneratedResolver }
 
-func (r *Generated{{$object.Name}}ResultTypeResolver) Items(ctx context.Context, obj *{{$object.Name}}ResultType) (items []*{{$object.Name}}, err error) {
+func (r *Generated{{$object.Name}}ResultTypeResolver) Data(ctx context.Context, obj *{{$object.Name}}ResultType) (items []*{{$object.Name}}, err error) {
 	err = obj.GetItems(ctx, r.DB.db, "{{$object.TableName}}", &items)
 	return
 }
 
-func (r *Generated{{$object.Name}}ResultTypeResolver) Count(ctx context.Context, obj *{{$object.Name}}ResultType) (count int, err error) {
+func (r *Generated{{$object.Name}}ResultTypeResolver) Total(ctx context.Context, obj *{{$object.Name}}ResultType) (count int, err error) {
+	return obj.GetCount(ctx, r.DB.db, &{{$object.Name}}{})
+}
+
+func (r *Generated{{$object.Name}}ResultTypeResolver) CurrentPage(ctx context.Context, obj *{{$object.Name}}ResultType) (count int, err error) {
+	return obj.GetCount(ctx, r.DB.db, &{{$object.Name}}{})
+}
+
+func (r *Generated{{$object.Name}}ResultTypeResolver) PerPage(ctx context.Context, obj *{{$object.Name}}ResultType) (count int, err error) {
+	return obj.GetCount(ctx, r.DB.db, &{{$object.Name}}{})
+}
+
+func (r *Generated{{$object.Name}}ResultTypeResolver) TotalPage(ctx context.Context, obj *{{$object.Name}}ResultType) (count int, err error) {
 	return obj.GetCount(ctx, r.DB.db, &{{$object.Name}}{})
 }
 
