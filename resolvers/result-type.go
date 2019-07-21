@@ -72,7 +72,11 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, alias strin
 
 	// maiguangyang update
 	if r.PerPage != nil {
-		q = q.Limit(*r.PerPage)
+		if int(*r.PerPage) == 0 {
+			q = q.Limit(1)
+		} else {
+			q = q.Limit(*r.PerPage)
+		}
 	}
 	if r.CurrentPage != nil {
 		// q = q.Offset(*r.CurrentPage)
