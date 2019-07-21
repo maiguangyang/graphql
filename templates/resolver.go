@@ -5,6 +5,7 @@ var Resolver = `package gen
 import (
 	"context"
 	"time"
+	"math"
 	"strings"
 
 	"github.com/maiguangyang/graphql/resolvers"
@@ -181,14 +182,10 @@ type GeneratedQueryResolver struct{ *GeneratedResolver }
 {{range $object := .Model.Objects}}
 func (r *GeneratedQueryResolver) {{$object.Name}}(ctx context.Context, id *string, q *string, filter *{{$object.Name}}FilterType) (*{{$object.Name}}, error) {
 	query := {{$object.Name}}QueryFilter{q}
-	offset := 0
-	limit := 1
 	current_page := 0
 	per_page := 0
 	rt := &{{$object.Name}}ResultType{
 		EntityResultType: resolvers.EntityResultType{
-			Offset: &offset,
-			Limit:  &limit,
 			CurrentPage: &current_page,
 			PerPage:  &per_page,
 			Query:  &query,
@@ -201,7 +198,7 @@ func (r *GeneratedQueryResolver) {{$object.Name}}(ctx context.Context, id *strin
 	}
 
 	var items []*{{$object.Name}}
-	err := rt.GetItems(ctx, qb, "{{$object.TableName}}", &items)
+	err := rt.GetData(ctx, qb, "{{$object.TableName}}", &items)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +207,7 @@ func (r *GeneratedQueryResolver) {{$object.Name}}(ctx context.Context, id *strin
 	}
 	return items[0], err
 }
-func (r *GeneratedQueryResolver) {{$object.PluralName}}(ctx context.Context, offset *int, limit *int, current_page *int, per_page *int, q *string, sort []{{$object.Name}}SortType, filter *{{$object.Name}}FilterType) (*{{$object.Name}}ResultType, error) {
+func (r *GeneratedQueryResolver) {{$object.PluralName}}(ctx context.Context, current_page *int, per_page *int, q *string, sort []{{$object.Name}}SortType, filter *{{$object.Name}}FilterType) (*{{$object.Name}}ResultType, error) {
 	_sort := []resolvers.EntitySort{}
 	for _, s := range sort {
 		_sort = append(_sort, s)
@@ -218,8 +215,6 @@ func (r *GeneratedQueryResolver) {{$object.PluralName}}(ctx context.Context, off
 	query := {{$object.Name}}QueryFilter{q}
 	return &{{$object.Name}}ResultType{
 		EntityResultType: resolvers.EntityResultType{
-			Offset: offset,
-			Limit:  limit,
 			CurrentPage: current_page,
 			PerPage:  per_page,
 			Query:  &query,
@@ -232,24 +227,28 @@ func (r *GeneratedQueryResolver) {{$object.PluralName}}(ctx context.Context, off
 type Generated{{$object.Name}}ResultTypeResolver struct{ *GeneratedResolver }
 
 func (r *Generated{{$object.Name}}ResultTypeResolver) Data(ctx context.Context, obj *{{$object.Name}}ResultType) (items []*{{$object.Name}}, err error) {
-	err = obj.GetItems(ctx, r.DB.db, "{{$object.TableName}}", &items)
+	err = obj.GetData(ctx, r.DB.db, "{{$object.TableName}}", &items)
 	return
 }
 
 func (r *Generated{{$object.Name}}ResultTypeResolver) Total(ctx context.Context, obj *{{$object.Name}}ResultType) (count int, err error) {
-	return obj.GetCount(ctx, r.DB.db, &{{$object.Name}}{})
+	return obj.GetTotal(ctx, r.DB.db, &{{$object.Name}}{})
 }
 
 func (r *Generated{{$object.Name}}ResultTypeResolver) CurrentPage(ctx context.Context, obj *{{$object.Name}}ResultType) (count int, err error) {
-	return obj.GetCount(ctx, r.DB.db, &{{$object.Name}}{})
+	return int(*obj.EntityResultType.CurrentPage), nil
 }
 
 func (r *Generated{{$object.Name}}ResultTypeResolver) PerPage(ctx context.Context, obj *{{$object.Name}}ResultType) (count int, err error) {
-	return obj.GetCount(ctx, r.DB.db, &{{$object.Name}}{})
+	return int(*obj.EntityResultType.PerPage), nil
 }
 
 func (r *Generated{{$object.Name}}ResultTypeResolver) TotalPage(ctx context.Context, obj *{{$object.Name}}ResultType) (count int, err error) {
-	return obj.GetCount(ctx, r.DB.db, &{{$object.Name}}{})
+	total, _   := r.Total(ctx, obj)
+	perPage, _ := r.PerPage(ctx, obj)
+	totalPage  := int(math.Ceil(float64(total) / float64(perPage)))
+
+	return totalPage, nil
 }
 
 {{if .HasRelationships}}

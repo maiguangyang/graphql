@@ -60,7 +60,7 @@ func recurseSelectionSets(reqCtx *graphql.RequestContext, fields []string, selec
 
 
 // GetResultTypeItems ...
-func (r *EntityResultType) GetItems(ctx context.Context, db *gorm.DB, alias string, out interface{}) error {
+func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, alias string, out interface{}) error {
 	q := db
 
 	// 麦广扬添加
@@ -70,12 +70,13 @@ func (r *EntityResultType) GetItems(ctx context.Context, db *gorm.DB, alias stri
 		q = q.Select(selects)
 	}
 
-	// 原来的
-	if r.Limit != nil {
-		q = q.Limit(*r.Limit)
+	// maiguangyang update
+	if r.PerPage != nil {
+		q = q.Limit(*r.PerPage)
 	}
-	if r.Offset != nil {
-		q = q.Offset(*r.Offset)
+	if r.CurrentPage != nil {
+		// q = q.Offset(*r.CurrentPage)
+		q = q.Offset((int(*r.CurrentPage) - 1) * int(*r.PerPage))
 	}
 
 	for _, s := range r.Sort {
@@ -122,9 +123,16 @@ func (r *EntityResultType) GetItems(ctx context.Context, db *gorm.DB, alias stri
 	return q.Find(out).Error
 }
 
-// GetCount ...
-func (r *EntityResultType) GetCount(ctx context.Context, db *gorm.DB, out interface{}) (count int, err error) {
+// GetTotal ...
+func (r *EntityResultType) GetTotal(ctx context.Context, db *gorm.DB, out interface{}) (count int, err error) {
 	q := db
+
+	// if r.Limit != nil {
+	// 	q = q.Limit(*r.Limit)
+	// }
+	// if r.Offset != nil {
+	// 	q = q.Offset(*r.Offset)
+	// }
 
 	dialect := q.Dialect()
 	wheres := []string{}
@@ -155,7 +163,11 @@ func (r *EntityResultType) GetCount(ctx context.Context, db *gorm.DB, out interf
 	for join := range uniqueJoins {
 		q = q.Joins(join)
 	}
-	err = q.Model(out).Count(&count).Error
+
+	if err := q.Model(out).Count(&count).Error; err != nil {
+		return 0, nil
+	}
+
 	return
 }
 

@@ -58,17 +58,17 @@ func listFieldDefinition(obj Object) *ast.FieldDefinition {
 		Name: nameNode(inflection.Plural(strcase.ToLowerCamel(obj.Name()))),
 		Type: namedType(obj.Name() + "ResultType"),
 		Arguments: []*ast.InputValueDefinition{
-			&ast.InputValueDefinition{
-				Kind: kinds.InputValueDefinition,
-				Name: nameNode("offset"),
-				Type: namedType("Int"),
-			},
-			&ast.InputValueDefinition{
-				Kind:         kinds.InputValueDefinition,
-				Name:         nameNode("limit"),
-				DefaultValue: &ast.IntValue{Kind: kinds.IntValue, Value: "30"},
-				Type:         namedType("Int"),
-			},
+			// &ast.InputValueDefinition{
+			// 	Kind: kinds.InputValueDefinition,
+			// 	Name: nameNode("offset"),
+			// 	Type: namedType("Int"),
+			// },
+			// &ast.InputValueDefinition{
+			// 	Kind:         kinds.InputValueDefinition,
+			// 	Name:         nameNode("limit"),
+			// 	DefaultValue: &ast.IntValue{Kind: kinds.IntValue, Value: "30"},
+			// 	Type:         namedType("Int"),
+			// },
 
 			&ast.InputValueDefinition{
 				Kind: kinds.InputValueDefinition,
@@ -79,7 +79,7 @@ func listFieldDefinition(obj Object) *ast.FieldDefinition {
 			&ast.InputValueDefinition{
 				Kind:         kinds.InputValueDefinition,
 				Name:         nameNode("per_page"),
-				DefaultValue: &ast.IntValue{Kind: kinds.IntValue, Value: "30"},
+				DefaultValue: &ast.IntValue{Kind: kinds.IntValue, Value: "20"},
 				Type:         namedType("Int"),
 			},
 
