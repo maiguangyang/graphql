@@ -15,20 +15,22 @@ type EntityFilter interface {
 	Apply(ctx context.Context, dialect gorm.Dialect, wheres *[]string, values *[]interface{}, joins *[]string) error
 }
 type EntityFilterQuery interface {
-	Apply(ctx context.Context, dialect gorm.Dialect, wheres *[]string, values *[]interface{}, joins *[]string) error
+	Apply(ctx context.Context, dialect gorm.Dialect, selectionSet *ast.SelectionSet, wheres *[]string, values *[]interface{}, joins *[]string) error
 }
 type EntitySort interface {
 	String() string
 }
 
 type EntityResultType struct {
-	Offset *int
-	Limit  *int
-	CurrentPage *int
-	PerPage  *int
-	Query  EntityFilterQuery
-	Sort   []EntitySort
-	Filter EntityFilter
+	Offset       *int
+	Limit        *int
+	CurrentPage  *int
+	PerPage      *int
+	Query        EntityFilterQuery
+	Sort         []EntitySort
+	Filter       EntityFilter
+	Fields       []*ast.Field
+	SelectionSet *ast.SelectionSet
 }
 
 // maiguangyang new add
@@ -98,7 +100,7 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, alias strin
 	values := []interface{}{}
 	joins := []string{}
 
-	err := r.Query.Apply(ctx, dialect, &wheres, &values, &joins)
+	err := r.Query.Apply(ctx, dialect, r.SelectionSet, &wheres, &values, &joins)
 	if err != nil {
 		return err
 	}
@@ -143,7 +145,7 @@ func (r *EntityResultType) GetTotal(ctx context.Context, db *gorm.DB, out interf
 	values := []interface{}{}
 	joins := []string{}
 
-	err = r.Query.Apply(ctx, dialect, &wheres, &values, &joins)
+	err = r.Query.Apply(ctx, dialect, r.SelectionSet, &wheres, &values, &joins)
 	if err != nil {
 		return 0, err
 	}
