@@ -23,6 +23,7 @@ func PrintSchema(model Model) (string, error) {
 		for _, f := range o.Def.Fields {
 			f.Directives = filterDirective(f.Directives, "relationship")
 			f.Directives = filterDirective(f.Directives, "column")
+			f.Directives = filterDirective(f.Directives, "validator")
 			fields = append(fields, f)
 		}
 		o.Def.Fields = fields

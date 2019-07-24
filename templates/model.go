@@ -26,6 +26,8 @@ type {{.Name}} struct {
 type {{.Name}}Changes struct {
 {{range $col := $object.Columns}}
 	{{$col.MethodName}} {{$col.GoType}}{{end}}
+	{{range $rel := $object.Relationships}}{{if $rel.IsToMany}}
+	{{$rel.ChangesName}} {{$rel.ChangesType}}{{end}}{{end}}
 }
 
 {{end}}

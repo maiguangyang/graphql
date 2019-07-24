@@ -218,7 +218,7 @@ func getJWTClaims(req *http.Request) (*JWTClaims, error) {
 }
 func createDummyModelFile() error {
 	content := `type User {
-	email: String
+	email: String @column(gorm: "type:varchar(64) comment '用户邮箱地址';default:null;") @validator(required: "true", tye: "email")
 	firstName: String
 	lastName: String
 

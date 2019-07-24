@@ -34,7 +34,7 @@ DATABASE_URL=sqlite3://test.db PORT=8080 go run *.go
 
 # Example
 
-You can find example project at [graphql-orm-example repo](https://github.com/maiguangyang/graphql-example)
+You can find example project at [graphql-orm-example repo](https://github.com/maiguangyang/graphql-gorm)
 
 # Schema preview in Voyager
 
