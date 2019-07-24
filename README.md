@@ -62,7 +62,7 @@ If you generated Dockerfile initialization it's as easy as running:
 docker build -t {IMAGE_NAME} .
 ```
 
-If you want to create your own docker image, you can check the example repository for generated Dockerfile: https://github.com/maiguangyang/graphql-example/blob/master/Dockerfile
+If you want to create your own docker image, you can check the example repository for generated Dockerfile: https://github.com/maiguangyang/graphql-gorm
 
 # What's this library for?
 
