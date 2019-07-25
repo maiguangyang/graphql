@@ -70,6 +70,9 @@ func (r *GeneratedMutationResolver) Create{{.Name}}(ctx context.Context, input m
 {{end}}
 {{end}}
 
+	err = tx.Create(item).Error
+
+
 {{range $rel := .Relationships}}
 {{if $rel.IsToMany}}
 	if ids,ok:=input["{{$rel.Name}}Ids"].([]interface{}); ok {
@@ -81,7 +84,6 @@ func (r *GeneratedMutationResolver) Create{{.Name}}(ctx context.Context, input m
 {{end}}
 {{end}}
 
-	err = tx.Create(item).Error
 	if err != nil {
 		tx.Rollback()
 		return
@@ -134,6 +136,8 @@ func (r *GeneratedMutationResolver) Update{{.Name}}(ctx context.Context, id stri
 {{end}}
 {{end}}
 
+	err = tx.Save(item).Error
+
 {{range $rel := .Relationships}}
 {{if $rel.IsToMany}}
 	if ids,ok:=input["{{$rel.Name}}Ids"].([]interface{}); ok {
@@ -145,7 +149,6 @@ func (r *GeneratedMutationResolver) Update{{.Name}}(ctx context.Context, id stri
 {{end}}
 {{end}}
 
-	err = tx.Save(item).Error
 	if err != nil {
 		tx.Rollback()
 		return
@@ -166,12 +169,36 @@ func (r *GeneratedMutationResolver) Update{{.Name}}(ctx context.Context, id stri
 }
 func (r *GeneratedMutationResolver) Delete{{.Name}}(ctx context.Context, id string) (item *{{.Name}}, err error) {
 	item = &{{.Name}}{}
+	tx := r.DB.db.Begin()
+
 	err = resolvers.GetItem(ctx, r.DB.Query(), item, &id)
 	if err != nil {
 		return
 	}
 
 	err = r.DB.Query().Delete(item, "{{.TableName}}.id = ?", id).Error
+
+	if err != nil {
+		return
+	}
+
+{{range $rel := .Relationships}}
+{{if $rel.IsToMany}}
+	items := []{{$rel.TargetType}}{}
+	tx.Find(&items, "id = ?", id)
+	err = tx.Model(&items).Delete(items).Error
+{{end}}
+{{end}}
+
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+	err = tx.Commit().Error
+	if err != nil {
+		tx.Rollback()
+		return
+	}
 
 	return
 }
