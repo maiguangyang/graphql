@@ -117,9 +117,9 @@ func (r *GeneratedMutationResolver) Update{{.Name}}(ctx context.Context, id stri
 	tx := r.DB.db.Begin()
 
 	event := events.NewEvent(events.EventMetadata{
-		Type:        events.EventTypeCreated,
+		Type:        events.EventTypeUpdated,
 		Entity:      "{{.Name}}",
-		EntityID:    item.ID,
+		EntityID:    id,
 		Date:        now.Unix(),
 		PrincipalID: principalID,
 	})
@@ -199,9 +199,10 @@ func (r *GeneratedMutationResolver) Update{{.Name}}(ctx context.Context, id stri
 func (r *GeneratedMutationResolver) Delete{{.Name}}(ctx context.Context, id string) (item *{{.Name}}, err error) {
 	principalID := getPrincipalID(ctx)
 	item = &{{.Name}}{}
+	now := time.Now()
 	tx := r.DB.db.Begin()
 
-	err = resolvers.GetItem(ctx, r.DB.Query(), item, &id)
+	err = resolvers.GetItem(ctx, tx, item, &id)
 	if err != nil {
 		return
 	}
@@ -213,6 +214,15 @@ func (r *GeneratedMutationResolver) Delete{{.Name}}(ctx context.Context, id stri
 	item.State      = &state
 
 	// err = r.DB.Query().Delete(item, "{{.TableName}}.id = ?", id).Error
+
+	event := events.NewEvent(events.EventMetadata{
+		Type:        events.EventTypeDeleted,
+		Entity:      "{{.Name}}",
+		EntityID:    id,
+		Date:        now.Unix(),
+		PrincipalID: principalID,
+	})
+
 	if err = tx.Save(item).Error; err != nil {
 		return
 	}
@@ -238,6 +248,7 @@ func (r *GeneratedMutationResolver) Delete{{.Name}}(ctx context.Context, id stri
 		tx.Rollback()
 		return
 	}
+	err = r.EventController.SendEvent(ctx, &event)
 
 	return
 }
