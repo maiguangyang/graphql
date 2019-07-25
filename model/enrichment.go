@@ -14,7 +14,7 @@ func EnrichModelObjects(m *Model) error {
 	id := fieldDefinition("id", "ID", true)
 	createdAt := fieldDefinition("createdAt", "Int", false)
 	updatedAt := fieldDefinition("updatedAt", "Int", false)
-	deletedAt := fieldDefinition("deletedAt", "Int", false)
+	state := fieldDefinition("state", "Int", false)
 	createdBy := fieldDefinition("createdBy", "ID", false)
 	updatedBy := fieldDefinition("updatedBy", "ID", false)
 	deletedBy := fieldDefinition("deletedBy", "ID", false)
@@ -26,7 +26,7 @@ func EnrichModelObjects(m *Model) error {
 				o.Def.Fields = append(o.Def.Fields, fieldDefinition(rel.Name()+"Id", "ID", false))
 			}
 		}
-		o.Def.Fields = append(o.Def.Fields, deletedAt, updatedAt, createdAt, deletedBy, updatedBy, createdBy)
+		o.Def.Fields = append(o.Def.Fields, state, updatedAt, createdAt, deletedBy, updatedBy, createdBy)
 	}
 
 	return nil

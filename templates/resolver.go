@@ -70,24 +70,34 @@ func (r *GeneratedMutationResolver) Create{{.Name}}(ctx context.Context, input m
 {{end}}
 {{end}}
 
-	err = tx.Create(item).Error
-
+	if err = tx.Create(item).Error; err != nil {
+		return
+	}
 
 {{range $rel := .Relationships}}
 {{if $rel.IsToMany}}
-	if ids,ok:=input["{{$rel.Name}}Ids"].([]interface{}); ok {
-		items := []{{$rel.TargetType}}{}
-		tx.Find(&items, "id IN (?)", ids)
-		association := tx.Model(&item).Association("{{$rel.MethodName}}")
-		association.Replace(items)
-	}
-{{end}}
-{{end}}
+	items := []{{$rel.TargetType}}{}
 
-	if err != nil {
+	if ids,ok:=input["{{$rel.Name}}Ids"].([]interface{}); ok {
+		tx.Find(&items, "id IN (?)", ids)
+		if err = tx.Model(&item).Association("{{$rel.MethodName}}").Replace(items).Error; err != nil {
+			tx.Rollback()
+			return
+		}
+	}
+
+	if err = tx.Model(&items).Where("assigneeId = ?", item.ID).Update("state", item.State).Error; err != nil {
 		tx.Rollback()
 		return
 	}
+
+{{end}}
+{{end}}
+
+	// if err != nil {
+	// 	tx.Rollback()
+	// 	return
+	// }
 	err = tx.Commit().Error
 	if err != nil {
 		tx.Rollback()
@@ -125,6 +135,12 @@ func (r *GeneratedMutationResolver) Update{{.Name}}(ctx context.Context, id stri
 		return
 	}
 
+	{{range $rel := .Relationships}}
+	{{if $rel.IsToMany}}
+		oldState       := item.State
+	{{end}}
+	{{end}}
+
 	item.UpdatedBy = principalID
 
 {{range $col := .Columns}}{{if $col.IsUpdatable}}
@@ -136,23 +152,36 @@ func (r *GeneratedMutationResolver) Update{{.Name}}(ctx context.Context, id stri
 {{end}}
 {{end}}
 
-	err = tx.Save(item).Error
+	if err = tx.Save(item).Error; err != nil {
+		return
+	}
 
 {{range $rel := .Relationships}}
 {{if $rel.IsToMany}}
+	items := []{{$rel.TargetType}}{}
+
 	if ids,ok:=input["{{$rel.Name}}Ids"].([]interface{}); ok {
-		items := []{{$rel.TargetType}}{}
 		tx.Find(&items, "id IN (?)", ids)
-		association := tx.Model(&item).Association("{{$rel.MethodName}}")
-		association.Replace(items)
+		if err = tx.Model(&item).Association("{{$rel.MethodName}}").Replace(items).Error; err != nil {
+			tx.Rollback()
+			return
+		}
+	}
+
+	// 判断是不是改变状态
+	if oldState != item.State {
+		if err = tx.Model(&items).Where("assigneeId = ?", item.ID).Update("state", item.State).Error; err != nil {
+			tx.Rollback()
+			return
+		}
 	}
 {{end}}
 {{end}}
 
-	if err != nil {
-		tx.Rollback()
-		return
-	}
+	// if err != nil {
+	// 	tx.Rollback()
+	// 	return
+	// }
 	err = tx.Commit().Error
 	if err != nil {
 		tx.Rollback()
@@ -168,6 +197,7 @@ func (r *GeneratedMutationResolver) Update{{.Name}}(ctx context.Context, id stri
 	return
 }
 func (r *GeneratedMutationResolver) Delete{{.Name}}(ctx context.Context, id string) (item *{{.Name}}, err error) {
+	principalID := getPrincipalID(ctx)
 	item = &{{.Name}}{}
 	tx := r.DB.db.Begin()
 
@@ -176,24 +206,33 @@ func (r *GeneratedMutationResolver) Delete{{.Name}}(ctx context.Context, id stri
 		return
 	}
 
-	err = r.DB.Query().Delete(item, "{{.TableName}}.id = ?", id).Error
+	// 3为删除
+	var state int64 = 3
 
-	if err != nil {
+	item.UpdatedBy  = principalID
+	item.State      = &state
+
+	// err = r.DB.Query().Delete(item, "{{.TableName}}.id = ?", id).Error
+	if err = tx.Save(item).Error; err != nil {
 		return
 	}
 
 {{range $rel := .Relationships}}
 {{if $rel.IsToMany}}
 	items := []{{$rel.TargetType}}{}
-	tx.Find(&items, "id = ?", id)
-	err = tx.Model(&items).Delete(items).Error
-{{end}}
-{{end}}
-
-	if err != nil {
+	// tx.Find(&items, "id = ?", id)
+	// err = tx.Model(&items).Delete(items).Error
+	if err = tx.Model(&items).Where("assigneeId = ?", id).Update("state", state).Error; err != nil {
 		tx.Rollback()
 		return
 	}
+{{end}}
+{{end}}
+
+	// if err != nil {
+	// 	tx.Rollback()
+	// 	return
+	// }
 	err = tx.Commit().Error
 	if err != nil {
 		tx.Rollback()
@@ -296,7 +335,7 @@ func (r *Generated{{$object.Name}}Resolver) {{$relationship.MethodName}}(ctx con
 	selects := resolvers.GetFieldsRequested(ctx, strings.ToLower("{{$relationship.MethodName}}"))
 
 	items := []*{{.TargetType}}{}
-	err = r.DB.Query().Select(selects).Model(obj).Related(&items, "{{$relationship.MethodName}}").Error
+	err = r.DB.Query().Where("state = ?", 1).Select(selects).Model(obj).Related(&items, "{{$relationship.MethodName}}").Error
 	res = items
 {{else}}
 	item := {{.TargetType}}{}

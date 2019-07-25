@@ -83,24 +83,28 @@ func IndexOf(str []interface{}, data interface{}) int {
 
 func (o *ObjectColumn) ModelTags() string {
 	_gorm := fmt.Sprintf("column:%s;null;default:null", o.Name())
-	dateArr := []interface{}{"createdAt", "updatedAt", "deletedAt"}
+	dateArr := []interface{}{"createdAt", "updatedAt", "state"}
 
 	if o.Name() == "id" {
 		_gorm = "type:varchar(36) comment 'uuid';primary_key;NOT NULL;"
 	}
 
 	if IndexOf(dateArr, o.Name()) != -1 {
-    comment := ""
+		tye := "type:int(11)"
+
+    comment := "null;default:null"
     switch o.Name() {
       case "createdAt":
-        comment = "创建时间"
+        comment = "'创建时间';null;default:null"
       case "updatedAt":
-        comment = "更新时间"
-      case "deletedAt":
-        comment = "删除时间"
+        comment = "'更新时间';null;default:null"
+      case "state":
+      	tye = "type:int(2)"
+        comment = "'状态：1/正常、2/禁用、3/删除';NOT NULL;default:1;"
     }
 
-    _gorm = fmt.Sprintf("type:int(11) comment '%s';null;default:null", comment)
+    _gorm = fmt.Sprintf("%s comment %s", tye, comment)
+
 	}
 
 	for _, d := range o.Def.Directives {
