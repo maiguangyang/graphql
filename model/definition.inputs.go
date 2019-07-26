@@ -18,22 +18,17 @@ func createObjectDefinition(obj Object) *ast.InputObjectDefinition {
 		if col.Name() == "id" {
 			t = getNamedType(t)
 		}
+
+		if isListType(getNullableType(t)) {
+			t = getNullableType(t)
+		}
+
 		fields = append(fields, &ast.InputValueDefinition{
 			Kind:        kinds.InputValueDefinition,
 			Name:        col.Def.Name,
 			Description: col.Def.Description,
 			Type:        t,
 		})
-	}
-	for _, rel := range obj.Relationships() {
-		if rel.IsToMany() {
-			fields = append(fields, &ast.InputValueDefinition{
-				Kind:        kinds.InputValueDefinition,
-				Name:        nameNode(rel.Name() + "Ids"),
-				Description: rel.Def.Description,
-				Type:        listType(nonNull(namedType("ID"))),
-			})
-		}
 	}
 
 	return &ast.InputObjectDefinition{
@@ -53,19 +48,10 @@ func updateObjectDefinition(obj Object) *ast.InputObjectDefinition {
 			Kind:        kinds.InputValueDefinition,
 			Name:        col.Def.Name,
 			Description: col.Def.Description,
-			Type:        getNamedType(col.Def.Type),
+			Type:        getNullableType(col.Def.Type),
 		})
 	}
-	for _, rel := range obj.Relationships() {
-		if rel.IsToMany() {
-			fields = append(fields, &ast.InputValueDefinition{
-				Kind:        kinds.InputValueDefinition,
-				Name:        nameNode(rel.Name() + "Ids"),
-				Description: rel.Def.Description,
-				Type:        listType(nonNull(namedType("ID"))),
-			})
-		}
-	}
+
 	return &ast.InputObjectDefinition{
 		Kind:   kinds.InputObjectDefinition,
 		Name:   nameNode(obj.Name() + "UpdateInput"),

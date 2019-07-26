@@ -280,7 +280,7 @@ func (r *GeneratedQueryResolver) {{$object.Name}}(ctx context.Context, id *strin
 		return nil, err
 	}
 	if len(items) == 0 {
-		return nil, fmt.Errorf("record not found")
+		return nil, fmt.Errorf("{{$object.Name}} not found")
 	}
 	return items[0], err
 }
@@ -360,6 +360,19 @@ func (r *Generated{{$object.Name}}Resolver) {{$relationship.MethodName}}(ctx con
 {{end}}
 	return
 }
+
+{{if $relationship.IsToMany}}
+func (r *Generated{{$object.Name}}Resolver) {{$relationship.MethodName}}Ids(ctx context.Context, obj *{{$object.Name}}) (ids []string, err error) {
+	ids = []string{}
+	items := []*{{$relationship.TargetType}}{}
+	err = r.DB.Query().Model(obj).Select("{{$relationship.Target.TableName}}.id").Related(&items, "{{$relationship.MethodName}}").Error
+	for _, item := range items {
+		ids = append(ids, item.ID)
+	}
+	return
+}
+{{end}}
+
 {{end}}
 {{end}}
 
