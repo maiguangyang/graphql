@@ -85,6 +85,8 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, alias strin
 		q = q.Offset((int(*r.CurrentPage) - 1) * int(*r.PerPage))
 	}
 
+	dialect := q.Dialect()
+
 	for _, s := range r.Sort {
 		direction := "ASC"
 		_s := s.String()
@@ -92,10 +94,9 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, alias strin
 			direction = "DESC"
 		}
 		col := strcase.ToLowerCamel(strings.ToLower(strings.TrimSuffix(_s, "_"+direction)))
-		q = q.Order(col + " " + direction)
+		q = q.Order(dialect.Quote(col) + " " + direction)
 	}
 
-	dialect := q.Dialect()
 	wheres := []string{"state = ?"}
 	values := []interface{}{1}
 	joins := []string{}
