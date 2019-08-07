@@ -9,7 +9,7 @@ import (
   "strings"
 
   "github.com/maiguangyang/graphql/resolvers"
-  uuid "github.com/satori/go.uuid"
+  "github.com/gofrs/uuid"
 )
 
 func getPrincipalID(ctx context.Context) *string {

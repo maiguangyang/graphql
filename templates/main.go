@@ -59,7 +59,7 @@ func main() {
 	// use this line to allow cors for all origins/methods/headers (for development)
 	// handler := cors.AllowAll().Handler(mux)
 
-	log.Printf("connect to http://localhost:%%s/graphql for GraphQL playground", port)
+	log.Printf("connect to http://localhost:%s/graphql for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
 func getPrincipalIDFromContext(ctx context.Context) *string {
