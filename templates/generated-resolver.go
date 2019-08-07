@@ -8,8 +8,11 @@ import (
   "math"
   "strings"
 
-  "github.com/maiguangyang/graphql/resolvers"
+  "github.com/99designs/gqlgen/graphql"
   "github.com/gofrs/uuid"
+  "github.com/maiguangyang/graphql/events"
+  "github.com/maiguangyang/graphql/resolvers"
+  "github.com/vektah/gqlparser/ast"
 )
 
 func getPrincipalID(ctx context.Context) *string {
@@ -32,7 +35,7 @@ func (r *GeneratedResolver) Query() QueryResolver {
 func (r *GeneratedResolver) {{.Name}}ResultType() {{.Name}}ResultTypeResolver {
   return &Generated{{.Name}}ResultTypeResolver{r}
 }
-{{if .HasRelationships}}
+{{if .HasAnyRelationships}}
 func (r *GeneratedResolver) {{.Name}}() {{.Name}}Resolver {
   return &Generated{{.Name}}Resolver{r}
 }
@@ -343,7 +346,7 @@ func (r *Generated{{$object.Name}}ResultTypeResolver) TotalPage(ctx context.Cont
   return totalPage, nil
 }
 
-{{if .HasRelationships}}
+{{if .HasAnyRelationships}}
 type Generated{{$object.Name}}Resolver struct { *GeneratedResolver }
 
 {{range $index, $relationship := .Relationships}}

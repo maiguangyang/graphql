@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
-
+	"github.com/jinzhu/gorm"
 )
 
 {{range $object := .Model.Objects}}
@@ -19,7 +19,7 @@ func (f *{{$object.Name}}FilterType) ApplyWithAlias(ctx context.Context, dialect
 		return nil
 	}
 	aliasPrefix := dialect.Quote(alias) + "."
-	
+
 	_where, _values := f.WhereContent(dialect, aliasPrefix)
 	*wheres = append(*wheres, _where...)
 	*values = append(*values, _values...)
@@ -56,7 +56,7 @@ func (f *{{$object.Name}}FilterType) ApplyWithAlias(ctx context.Context, dialect
 		*values = append(*values, vs...)
 		*joins = append(*joins, js...)
 	}
-	
+
 {{range $rel := $object.Relationships}}
 {{$varName := (printf "f.%s" $rel.MethodName)}}
 	if {{$varName}} != nil {

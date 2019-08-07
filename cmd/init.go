@@ -9,7 +9,7 @@ import (
 
 	"github.com/maiguangyang/graphql/templates"
 
-	"github.com/inloop/goclitools"
+	"github.com/novacloudcz/goclitools"
 
 	"gopkg.in/yaml.v2"
 

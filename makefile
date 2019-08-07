@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 test: generate-test build-test run-test
 generate-test:
 	cd test && go run ../main.go && cd ..

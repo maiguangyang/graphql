@@ -5,16 +5,10 @@ Feature: It should be possible to mutate with relationships
             """
             mutation {
             deleteAllUsers
-            createUser(input:{id:"johny",firstName:"John",lastName:"Doe"}) { id }
-            createUser(input:{id:"jane",firstName:"Jane",lastName:"Siri"}) { id }
+            johny:createUser(input:{id:"johny",firstName:"John",lastName:"Doe"}) { id }
+            jane:createUser(input:{id:"jane",firstName:"Jane",lastName:"Siri"}) { id }
             }
             """
-    # Given I send query:??????
-    #     """
-    #     mutation {
-    #     createUser(input:{id:"jane",firstName:"Jane",lastName:"Siri"}) { id }
-    #     }
-    #     """
 
     Scenario: Fetching multiple items with count
         When I send query:
