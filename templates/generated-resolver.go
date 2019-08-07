@@ -252,6 +252,12 @@ func (r *GeneratedMutationResolver) Delete{{.Name}}(ctx context.Context, id stri
 
   return
 }
+
+func (r *GeneratedMutationResolver) DeleteAll{{.PluralName}}(ctx context.Context) (bool, error) {
+	err := r.DB.db.Delete(&{{.Name}}{}).Error
+	return err == nil, err
+}
+
 {{end}}
 
 type GeneratedQueryResolver struct{ *GeneratedResolver }

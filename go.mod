@@ -6,6 +6,9 @@ require (
 	github.com/99designs/gqlgen v0.9.1
 	github.com/cloudevents/sdk-go v0.0.0-20190617162319-ccd952c41493
 	github.com/ghodss/yaml v1.0.0
+	github.com/gogo/protobuf v1.2.0 // indirect
+	github.com/gorilla/context v1.1.1 // indirect
+	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/graphql-go/graphql v0.7.8
 	github.com/graphql-services/memberships v0.0.0-20190429172148-a25d4aff5080
 	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c // indirect
