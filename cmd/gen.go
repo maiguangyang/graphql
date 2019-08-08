@@ -112,15 +112,9 @@ func generateFiles(m *model.Model, c *model.Config) error {
 	if err := templates.WriteTemplate(templates.Callback, "gen/callback.go", data); err != nil {
 		return err
 	}
+	if err := templates.WriteTemplate(templates.Loaders, "gen/loaders.go", data); err != nil {
+		return err
+	}
 	return nil
 }
 
-// func replaceStringInFile(filename, old, new string) error {
-// 	content, err := ioutil.ReadFile(filename)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	newContent := []byte(strings.Replace(string(content), old, new, -1))
-
-// 	return ioutil.WriteFile(filename, newContent, 0644)
-// }
