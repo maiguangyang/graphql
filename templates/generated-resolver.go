@@ -60,6 +60,10 @@ func (r *GeneratedMutationResolver) Create{{.Name}}(ctx context.Context, input m
     PrincipalID: principalID,
   })
 
+  if input["state"] == nil {
+    input["state"] = 1
+  }
+
   var changes {{.Name}}Changes
   err = ApplyChanges(input, &changes)
   if err != nil {
@@ -68,11 +72,19 @@ func (r *GeneratedMutationResolver) Create{{.Name}}(ctx context.Context, input m
 
 {{range $col := .Columns}}{{if $col.IsCreatable}}
   if _, ok := input["{{$col.Name}}"]; ok && (item.{{$col.MethodName}} != changes.{{$col.MethodName}}){{if $col.IsOptional}} && (item.{{$col.MethodName}} == nil || changes.{{$col.MethodName}} == nil || *item.{{$col.MethodName}} != *changes.{{$col.MethodName}}){{end}} {
-    {{if $col.IsPassWord}}item.{{$col.MethodName}} = utils.EncryptPassword(changes.{{$col.MethodName}}){{else}}item.{{$col.MethodName}} = changes.{{$col.MethodName}}{{end}}
+    item.{{$col.MethodName}} = changes.{{$col.MethodName}}
     event.AddNewValue("{{$col.Name}}", changes.{{$col.MethodName}})
   }
 {{end}}
 {{end}}
+
+  {{range $col := .Columns}}
+  {{if $col.IsPassWord}}
+    if input["password"] != nil {
+      item.Password = utils.EncryptPassword(item.Password)
+    }
+  {{end}}
+  {{end}}
 
   errText, resErr := utils.Validator(item)
   if resErr != nil {
@@ -133,30 +145,21 @@ func (r *GeneratedMutationResolver) Update{{.Name}}(ctx context.Context, id stri
     PrincipalID: principalID,
   })
 
+  if input["state"] == nil {
+    input["state"] = 1
+  }
+
   var changes {{.Name}}Changes
   err = ApplyChanges(input, &changes)
   if err != nil {
     return
   }
 
-  err = resolvers.GetItem(ctx, tx, item, &id)
-  if err != nil {
-    return
-  }
-
-  {{range $rel := .Relationships}}
-  {{if $rel.IsToMany}}
-    oldState       := item.State
-  {{end}}
-  {{end}}
-
-  item.UpdatedBy = principalID
-
 {{range $col := .Columns}}{{if $col.IsUpdatable}}
   if _, ok := input["{{$col.Name}}"]; ok && (item.{{$col.MethodName}} != changes.{{$col.MethodName}}){{if $col.IsOptional}} && (item.{{$col.MethodName}} == nil || changes.{{$col.MethodName}} == nil || *item.{{$col.MethodName}} != *changes.{{$col.MethodName}}){{end}} {
     event.AddOldValue("{{$col.Name}}", item.{{$col.MethodName}})
     event.AddNewValue("{{$col.Name}}", changes.{{$col.MethodName}})
-    {{if $col.IsPassWord}}item.{{$col.MethodName}} = utils.EncryptPassword(changes.{{$col.MethodName}}){{else}}item.{{$col.MethodName}} = changes.{{$col.MethodName}}{{end}}
+    item.{{$col.MethodName}} = changes.{{$col.MethodName}}
   }
 {{end}}
 {{end}}
@@ -166,7 +169,31 @@ func (r *GeneratedMutationResolver) Update{{.Name}}(ctx context.Context, id stri
     return item, &errText
   }
 
-  if err = tx.Save(item).Error; err != nil {
+  oldItem := &{{.Name}}{}
+  err = resolvers.GetItem(ctx, tx, oldItem, &id)
+  if err != nil {
+    return oldItem, err
+  }
+
+
+  {{range $rel := .Relationships}}
+  {{if $rel.IsToMany}}
+    oldState       := oldItem.State
+  {{end}}
+  {{end}}
+
+  item.UpdatedBy = principalID
+  item.ID        = id
+
+  {{range $col := .Columns}}
+  {{if $col.IsPassWord}}
+    if input["password"] != nil {
+      item.Password = utils.EncryptPassword(item.Password)
+    }
+  {{end}}
+  {{end}}
+
+  if err = tx.Model(&item).Updates(item).Error; err != nil {
     return
   }
 
