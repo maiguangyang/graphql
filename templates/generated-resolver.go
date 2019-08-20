@@ -13,6 +13,7 @@ import (
   "github.com/maiguangyang/graphql/events"
   "github.com/maiguangyang/graphql/resolvers"
   "github.com/vektah/gqlparser/ast"
+  "github.com/maiguangyang/graphql-gorm/utils"
 )
 
 func getPrincipalID(ctx context.Context) *string {
@@ -67,11 +68,16 @@ func (r *GeneratedMutationResolver) Create{{.Name}}(ctx context.Context, input m
 
 {{range $col := .Columns}}{{if $col.IsCreatable}}
   if _, ok := input["{{$col.Name}}"]; ok && (item.{{$col.MethodName}} != changes.{{$col.MethodName}}){{if $col.IsOptional}} && (item.{{$col.MethodName}} == nil || changes.{{$col.MethodName}} == nil || *item.{{$col.MethodName}} != *changes.{{$col.MethodName}}){{end}} {
-    item.{{$col.MethodName}} = changes.{{$col.MethodName}}
+    {{if $col.IsPassWord}}item.{{$col.MethodName}} = utils.EncryptPassword(changes.{{$col.MethodName}}){{else}}item.{{$col.MethodName}} = changes.{{$col.MethodName}}{{end}}
     event.AddNewValue("{{$col.Name}}", changes.{{$col.MethodName}})
   }
 {{end}}
 {{end}}
+
+  errText, resErr := utils.Validator(item)
+  if resErr != nil {
+    return item, &errText
+  }
 
   if err = tx.Create(item).Error; err != nil {
     return
@@ -150,10 +156,15 @@ func (r *GeneratedMutationResolver) Update{{.Name}}(ctx context.Context, id stri
   if _, ok := input["{{$col.Name}}"]; ok && (item.{{$col.MethodName}} != changes.{{$col.MethodName}}){{if $col.IsOptional}} && (item.{{$col.MethodName}} == nil || changes.{{$col.MethodName}} == nil || *item.{{$col.MethodName}} != *changes.{{$col.MethodName}}){{end}} {
     event.AddOldValue("{{$col.Name}}", item.{{$col.MethodName}})
     event.AddNewValue("{{$col.Name}}", changes.{{$col.MethodName}})
-    item.{{$col.MethodName}} = changes.{{$col.MethodName}}
+    {{if $col.IsPassWord}}item.{{$col.MethodName}} = utils.EncryptPassword(changes.{{$col.MethodName}}){{else}}item.{{$col.MethodName}} = changes.{{$col.MethodName}}{{end}}
   }
 {{end}}
 {{end}}
+
+  errText, resErr := utils.Validator(item)
+  if resErr != nil {
+    return item, &errText
+  }
 
   if err = tx.Save(item).Error; err != nil {
     return

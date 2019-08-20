@@ -40,6 +40,9 @@ func (o *ObjectColumn) IsCreatable() bool {
 func (o *ObjectColumn) IsUpdatable() bool {
 	return !(o.Name() == "id" || o.Name() == "createdAt" || o.Name() == "updatedAt" || o.Name() == "deletedAt" || o.Name() == "createdBy" || o.Name() == "updatedBy" || o.Name() == "deletedBy")
 }
+func (o *ObjectColumn) IsPassWord() bool {
+	return o.Name() == "password"
+}
 func (o *ObjectColumn) IsOptional() bool {
 	return o.Def.Type.GetKind() != "NonNull"
 }
