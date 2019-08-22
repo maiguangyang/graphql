@@ -11,10 +11,10 @@ import (
 
 // EnrichModelObjects ...
 func EnrichModelObjects(m *Model) error {
-	id := fieldDefinition("id", "ID", true)
+	id        := fieldDefinition("id", "ID", true)
 	createdAt := fieldDefinition("createdAt", "Int", false)
 	updatedAt := fieldDefinition("updatedAt", "Int", false)
-	state := fieldDefinition("state", "Int", false)
+	state     := fieldDefinition("state", "Int", false)
 	createdBy := fieldDefinition("createdBy", "ID", false)
 	updatedBy := fieldDefinition("updatedBy", "ID", false)
 	deletedBy := fieldDefinition("deletedBy", "ID", false)
@@ -28,12 +28,14 @@ func EnrichModelObjects(m *Model) error {
 		}
 		o.Def.Fields = append(o.Def.Fields, state, updatedAt, createdAt, deletedBy, updatedBy, createdBy)
 	}
-
 	return nil
 }
 
 // EnrichModel ...
 func EnrichModel(m *Model) error {
+	if m.HasFederatedTypes() {
+		m.Doc.Definitions = append(m.Doc.Definitions, createFederationEntityUnion(m))
+	}
 
 	definitions := []ast.Node{}
 	for _, o := range m.Objects() {
@@ -42,19 +44,38 @@ func EnrichModel(m *Model) error {
 				o.Def.Fields = append(o.Def.Fields, fieldDefinitionWithType(rel.Name()+"Ids", nonNull(listType(nonNull(namedType("ID"))))))
 			}
 		}
-
 		definitions = append(definitions, createObjectDefinition(o), updateObjectDefinition(o), createObjectSortType(o), createObjectFilterType(o))
 		definitions = append(definitions, objectResultTypeDefinition(&o))
 	}
 
 	schemaHeaderNodes := []ast.Node{
 		scalarDefinition("Time"),
+		scalarDefinition("_Any"),
 		schemaDefinition(m),
 		queryDefinition(m),
 		mutationDefinition(m),
 	}
 	m.Doc.Definitions = append(schemaHeaderNodes, m.Doc.Definitions...)
 	m.Doc.Definitions = append(m.Doc.Definitions, definitions...)
+	m.Doc.Definitions = append(m.Doc.Definitions, createFederationServiceObject())
+
+	return nil
+}
+
+func BuildFederatedModel(m *Model) error {
+
+	for _, e := range m.ObjectExtensions() {
+		if e.IsFederatedType() {
+			m.Doc.Definitions = append(m.Doc.Definitions, getObjectDefinitionFromFederationExtension(e.Object.Def))
+			m.RemoveObjectExtension(&e)
+		}
+	}
+
+	for _, obj := range m.Objects() {
+		if obj.HasDirective("key") {
+			obj.Def.Directives = filterDirective(obj.Def.Directives, "key")
+		}
+	}
 
 	return nil
 }
@@ -74,10 +95,8 @@ func fieldDefinition(fieldName, fieldType string, isNonNull bool) *ast.FieldDefi
 	if isNonNull {
 		t = nonNull(t)
 	}
-
 	return fieldDefinitionWithType(fieldName, t)
 }
-
 func fieldDefinitionWithType(fieldName string, t ast.Type) *ast.FieldDefinition {
 	return &ast.FieldDefinition{
 		Name: nameNode(fieldName),

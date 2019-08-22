@@ -3,7 +3,10 @@ package templates
 var Model = `package gen
 
 import (
+	"fmt"
+	"reflect"
 	"time"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/mitchellh/mapstructure"
 	"github.com/maiguangyang/graphql/resolvers"
@@ -25,13 +28,14 @@ type {{.Name}} struct {
 {{end}}
 }
 
+func (m *{{.Name}}) Is_Entity() {}
+
 type {{.Name}}Changes struct {
-{{range $col := $object.Columns}}
+	{{range $col := $object.Columns}}
 	{{$col.MethodName}} {{$col.GoType}}{{end}}
 	{{range $rel := $object.Relationships}}{{if $rel.IsToMany}}
 	{{$rel.ChangesName}} {{$rel.ChangesType}}{{end}}{{end}}
 }
-
 {{end}}
 
 // used to convert map[string]interface{} to EntityChanges struct

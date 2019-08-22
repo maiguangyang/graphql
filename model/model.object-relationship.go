@@ -86,7 +86,6 @@ func (o *ObjectRelationship) TargetType() string {
 func (o *ObjectRelationship) GoType() string {
 	return o.ReturnType()
 }
-
 func (o *ObjectRelationship) ChangesName() string {
 	name := o.MethodName()
 	if o.IsToMany() {
@@ -103,7 +102,6 @@ func (o *ObjectRelationship) ChangesType() string {
 		return "*string"
 	}
 }
-
 func (o *ObjectRelationship) ModelTags() string {
 	tags := fmt.Sprintf(`json:"%s"`, o.Name())
 	invrel := o.InverseRelationship()

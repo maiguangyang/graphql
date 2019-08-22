@@ -18,7 +18,7 @@ func createObjectFilterType(obj Object) *ast.InputObjectDefinition {
 	// fields = append(fields, filterInputValues("id", namedType("ID"))...)
 
 	for _, col := range obj.Columns() {
-		if obj.IsToManyColumn(col) {
+		if obj.IsToManyColumn(col) || col.IsReadonlyType() {
 			continue
 		}
 		fields = append(fields, filterInputValues(&col, col.Def.Type)...)

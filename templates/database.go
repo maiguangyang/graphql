@@ -19,6 +19,15 @@ type DB struct {
 	db *gorm.DB
 }
 
+// NewDBFromEnvVars Create database client using DATABASE_URL environment variable
+func NewDBFromEnvVars() *DB {
+	urlString := os.Getenv("DATABASE_URL")
+	if urlString == "" {
+		panic(fmt.Errorf("missing DATABASE_URL environment variable"))
+	}
+	return NewDBWithString(urlString)
+}
+
 // NewDB ...
 func NewDB(db *gorm.DB) *DB {
 	prefix := os.Getenv("TABLE_NAME_PREFIX")
@@ -45,9 +54,9 @@ func NewDBWithString(urlString string) *DB {
 	if err != nil {
 		panic(err)
 	}
-	// db.DB().SetMaxIdleConns({{.Config.MaxIdleConnections}})
-	// db.DB().SetConnMaxLifetime(time.Second*{{.Config.ConnMaxLifetime}})
-	// db.DB().SetMaxOpenConns({{.Config.MaxOpenConnections}})
+	db.DB().SetMaxIdleConns({{.Config.MaxIdleConnections}})
+	db.DB().SetConnMaxLifetime(time.Second*{{.Config.ConnMaxLifetime}})
+	db.DB().SetMaxOpenConns({{.Config.MaxOpenConnections}})
 	db.LogMode(true)
 	return NewDB(db)
 }
@@ -58,7 +67,14 @@ func getConnectionString(u *url.URL) string {
 		host := strings.Split(u.Host, ":")[0]
 		return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", host, u.Port(), u.User.Username(), password, strings.TrimPrefix(u.Path, "/"))
 	}
-
+	if u.Scheme != "sqlite3" {
+		u.Host = "tcp(" + u.Host + ")"
+	}
+	if u.Scheme == "mysql" {
+		q := u.Query()
+		q.Set("parseTime", "true")
+		u.RawQuery = q.Encode()
+	}
 	return strings.Replace(u.String(), u.Scheme+"://", "", 1)
 }
 
@@ -69,7 +85,7 @@ func (db *DB) Query() *gorm.DB {
 
 // AutoMigrate ...
 func (db *DB) AutoMigrate() {
-	db.db.AutoMigrate({{range .Model.Objects}}
+	db.db.AutoMigrate({{range $obj := .Model.Objects}}
 		{{.Name}}{},{{end}}
 	)
 }

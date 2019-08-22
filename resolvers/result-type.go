@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/vektah/gqlparser/ast"
 	"github.com/iancoleman/strcase"
+	"github.com/vektah/gqlparser/ast"
 
 	"github.com/jinzhu/gorm"
 )
@@ -117,12 +117,16 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, alias strin
 		q = q.Where(strings.Join(wheres, " AND "), values...)
 	}
 
-	uniqueJoins := map[string]bool{}
+	uniqueJoinsMap := map[string]bool{}
+	uniqueJoins := []string{}
 	for _, join := range joins {
-		uniqueJoins[join] = true
+		if !uniqueJoinsMap[join] {
+			uniqueJoinsMap[join] = true
+			uniqueJoins = append(uniqueJoins, join)
+		}
 	}
 
-	for join := range uniqueJoins {
+	for _, join := range uniqueJoins {
 		q = q.Joins(join)
 	}
 
@@ -133,13 +137,6 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, alias strin
 // GetTotal ...
 func (r *EntityResultType) GetTotal(ctx context.Context, db *gorm.DB, out interface{}) (count int, err error) {
 	q := db
-
-	// if r.Limit != nil {
-	// 	q = q.Limit(*r.Limit)
-	// }
-	// if r.Offset != nil {
-	// 	q = q.Offset(*r.Offset)
-	// }
 
 	dialect := q.Dialect()
 	wheres := []string{}
@@ -164,9 +161,8 @@ func (r *EntityResultType) GetTotal(ctx context.Context, db *gorm.DB, out interf
 
 	uniqueJoinsMap := map[string]bool{}
 	uniqueJoins := []string{}
-
 	for _, join := range joins {
-		if uniqueJoinsMap[join] == false {
+		if !uniqueJoinsMap[join] {
 			uniqueJoinsMap[join] = true
 			uniqueJoins = append(uniqueJoins, join)
 		}

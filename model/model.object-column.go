@@ -35,43 +35,80 @@ func (o *ObjectColumn) TargetType() string {
 	return nt.Name.Value
 }
 func (o *ObjectColumn) IsCreatable() bool {
-	return !(o.Name() == "createdAt" || o.Name() == "updatedAt" || o.Name() == "deletedAt" || o.Name() == "createdBy" || o.Name() == "updatedBy" || o.Name() == "deletedBy")
+	return !(o.Name() == "createdAt" || o.Name() == "updatedAt" || o.Name() == "deletedAt" || o.Name() == "createdBy" || o.Name() == "updatedBy" || o.Name() == "deletedBy") && !o.IsReadonlyType()
 }
 func (o *ObjectColumn) IsUpdatable() bool {
-	return !(o.Name() == "id" || o.Name() == "createdAt" || o.Name() == "updatedAt" || o.Name() == "deletedAt" || o.Name() == "createdBy" || o.Name() == "updatedBy" || o.Name() == "deletedBy")
+	return !(o.Name() == "id" || o.Name() == "createdAt" || o.Name() == "updatedAt" || o.Name() == "deletedAt" || o.Name() == "createdBy" || o.Name() == "updatedBy" || o.Name() == "deletedBy") && !o.IsReadonlyType()
 }
-func (o *ObjectColumn) IsPassWord() bool {
-	return o.Name() == "password"
+func (o *ObjectColumn) IsReadonlyType() bool {
+	return !(o.IsScalarType() || o.IsEnumType()) || o.Obj.Model.HasObject(o.TargetType())
+}
+func (o *ObjectColumn) IsWritableType() bool {
+	return !o.IsReadonlyType()
+}
+func (o *ObjectColumn) IsScalarType() bool {
+	return o.Obj.Model.HasScalar(o.TargetType())
+}
+func (o *ObjectColumn) IsEnumType() bool {
+	return o.Obj.Model.HasEnum(o.TargetType())
 }
 func (o *ObjectColumn) IsOptional() bool {
-	return o.Def.Type.GetKind() != "NonNull"
+	return !isNonNullType(o.Def.Type)
+}
+func (o *ObjectColumn) IsList() bool {
+	return isListType(o.Def.Type)
 }
 func (o *ObjectColumn) IsSearchable() bool {
 	t := getNamedType(o.Def.Type).(*ast.Named)
 	return t.Name.Value == "String"
 }
+func (o *ObjectColumn) IsPassWord() bool {
+	return o.Name() == "password"
+}
+func (o *ObjectColumn) IsState() bool {
+	return o.Name() == "state"
+}
+func (o *ObjectColumn) Directive(name string) *ast.Directive {
+	for _, d := range o.Def.Directives {
+		if d.Name.Value == name {
+			return d
+		}
+	}
+	return nil
+}
+func (o *ObjectColumn) HasDirective(name string) bool {
+	return o.Directive(name) != nil
+}
+
 func (o *ObjectColumn) GoType() string {
 	return o.GoTypeWithPointer(true)
 }
 func (o *ObjectColumn) GoTypeWithPointer(showPointer bool) string {
-	t := ""
+	t := o.Def.Type
+	st := ""
 
 	if o.IsOptional() && showPointer {
-		t += "*"
+		st += "*"
+	} else {
+		t = getNullableType(t)
+	}
+
+	if isListType(t) {
+		st += "[]*"
 	}
 
 	v, ok := getNamedType(o.Def.Type).(*ast.Named)
 	if ok {
 		_t, known := goTypeMap[v.Name.Value]
 		if known {
-			t += _t
+			st += _t
 		} else {
-			t += v.Name.Value
+			st += v.Name.Value
 		}
 	}
-	return t
-}
 
+	return st
+}
 
 // 查找数组并返回下标
 func IndexOf(str []interface{}, data interface{}) int {
@@ -86,6 +123,7 @@ func IndexOf(str []interface{}, data interface{}) int {
 
 func (o *ObjectColumn) ModelTags() string {
 	_gorm := fmt.Sprintf("column:%s;null;default:null", o.Name())
+	_valid := ""
 	dateArr := []interface{}{"createdAt", "updatedAt", "state"}
 
 	if o.Name() == "id" {
@@ -117,11 +155,21 @@ func (o *ObjectColumn) ModelTags() string {
 					_gorm = fmt.Sprintf("%v", arg.Value.GetValue())
 				}
 			}
+		} else if d.Name.Value == "validator" {
+			for _, arg := range d.Arguments {
+				if arg.Name.Value == "required" && arg.Value.GetValue() != nil || arg.Name.Value == "type" && arg.Value.GetValue() != nil {
+					_valid += fmt.Sprintf("%v", arg.Name.Value + ":" + arg.Value.GetValue().(string) + ";")
+				}
+			}
 		}
 	}
 
+	if _valid != "" {
+		return fmt.Sprintf(`json:"%s" gorm:"%s" validator:"%s"`, o.Name(), _gorm, _valid)
+	}
 	return fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), _gorm)
 }
+
 
 type FilterMappingItem struct {
 	Suffix      string
