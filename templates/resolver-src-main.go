@@ -33,7 +33,13 @@ func (r *MutationResolver) Login(ctx context.Context, email string) (*interface{
 	opts.Filter = &gen.UserFilterType{
 		Email: &email,
 	}
-	user, _ := gen.QueryUserHandler(ctx, r.GeneratedResolver, opts)
+
+	user, err := gen.QueryUserHandler(ctx, r.GeneratedResolver, opts)
+
+	if err != nil {
+		resData = "登录密码错误"
+		return &resData, nil
+	}
 
 	// 生成JWT Token
   ip := ctx.Value("RemoteIp")
