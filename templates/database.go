@@ -1,24 +1,20 @@
 package templates
 
 var Database = `package gen
-
 import (
 	"fmt"
 	"net/url"
 	"strings"
-
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mssql"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
-
 // DB ...
 type DB struct {
 	db *gorm.DB
 }
-
 // NewDBFromEnvVars Create database client using DATABASE_URL environment variable
 func NewDBFromEnvVars() *DB {
 	urlString := os.Getenv("DATABASE_URL")
@@ -27,7 +23,6 @@ func NewDBFromEnvVars() *DB {
 	}
 	return NewDBWithString(urlString)
 }
-
 // NewDB ...
 func NewDB(db *gorm.DB) *DB {
 	prefix := os.Getenv("TABLE_NAME_PREFIX")
@@ -40,16 +35,13 @@ func NewDB(db *gorm.DB) *DB {
 	InitGorm(db)
 	return &v
 }
-
 // NewDBWithString ...
 func NewDBWithString(urlString string) *DB {
 	u, err := url.Parse(urlString)
 	if err != nil {
 		panic(err)
 	}
-
 	urlString = getConnectionString(u)
-
 	db, err := gorm.Open(u.Scheme, urlString)
 	if err != nil {
 		panic(err)
@@ -60,7 +52,6 @@ func NewDBWithString(urlString string) *DB {
 	db.LogMode(true)
 	return NewDB(db)
 }
-
 func getConnectionString(u *url.URL) string {
 	if u.Scheme == "postgres" {
 		password, _ := u.User.Password()
@@ -77,24 +68,20 @@ func getConnectionString(u *url.URL) string {
 	}
 	return strings.Replace(u.String(), u.Scheme+"://", "", 1)
 }
-
 // Query ...
 func (db *DB) Query() *gorm.DB {
 	return db.db
 }
-
 // AutoMigrate ...
-func (db *DB) AutoMigrate() {
-	db.db.AutoMigrate({{range $obj := .Model.Objects}}
+func (db *DB) AutoMigrate() *gorm.DB {
+	return db.db.AutoMigrate({{range $obj := .Model.Objects}}
 		{{.Name}}{},{{end}}
 	)
 }
-
 // Close ...
 func (db *DB) Close() error {
 	return db.db.Close()
 }
-
 func (db *DB) Ping() error {
 	return db.db.DB().Ping()
 }

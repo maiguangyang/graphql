@@ -137,7 +137,14 @@ type GeneratedQueryResolver struct{ *GeneratedResolver }
 				return r.Handlers.{{$obj.Name}}{{$col.MethodName}}(ctx, r, obj)
 			}
 			func {{$obj.Name}}{{$col.MethodName}}Handler(ctx context.Context,r *Generated{{$obj.Name}}Resolver, obj *{{$obj.Name}}) (res {{$col.GoType}}, err error) {
-				return nil, fmt.Errorf("Resolver handler for {{$obj.Name}}{{$col.MethodName}} not implemented")
+				{{if and (not $col.IsList) $col.HasTargetTypeWithIDField ($obj.HasColumn (print $col.Name "Id"))}}
+				if obj.{{$col.MethodName}}ID != nil {
+					res = &{{$col.TargetType}}{ID: *obj.{{$col.MethodName}}ID}
+				}
+				{{else}}
+				err = fmt.Errorf("Resolver handler for {{$obj.Name}}{{$col.MethodName}} not implemented")
+				{{end}}
+				return
 			}
 			{{end}}
 		{{end}}
