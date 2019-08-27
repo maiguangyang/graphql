@@ -41,6 +41,11 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		    input["state"] = 1
 		  }
 	  {{end}}
+	  {{if $col.IsDel}}
+		  if input["del"] == nil {
+		    input["del"] = 1
+		  }
+	  {{end}}
 	  {{end}}
 
 		var changes {{$obj.Name}}Changes
@@ -79,6 +84,12 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 				if ids,ok:=input["{{$rel.Name}}Ids"].([]interface{}); ok {
 					items := []{{$rel.TargetType}}{}
 					tx.Find(&items, "id IN (?)", ids)
+
+					for k, _ := range items {
+						items[k].State = item.State
+						items[k].Del   = item.Del
+					}
+
 					association := tx.Model(&item).Association("{{$rel.MethodName}}")
 					association.Replace(items)
 				}
@@ -120,6 +131,11 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		    input["state"] = 1
 		  }
 	  {{end}}
+	  {{if $col.IsDel}}
+		  if input["del"] == nil {
+		    input["del"] = 1
+		  }
+	  {{end}}
 	  {{end}}
 
 		var changes {{$obj.Name}}Changes
@@ -142,18 +158,6 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 	    return item, &errText
 	  }
 
-	  oldItem := &{{$obj.Name}}{}
-	  err = resolvers.GetItem(ctx, tx, oldItem, &id)
-	  if err != nil {
-	    return oldItem, err
-	  }
-
-	  {{range $rel := .Relationships}}
-	  {{if $rel.IsToMany}}
-	    oldState       := oldItem.State
-	  {{end}}
-	  {{end}}
-
 	  item.UpdatedBy = principalID
 	  item.ID        = id
 
@@ -172,20 +176,18 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 
 		{{range $rel := $obj.Relationships}}
 		{{if $rel.IsToMany}}{{if not $rel.Target.IsExtended}}
-			items := []{{$rel.TargetType}}{}
 			if ids,ok := input["{{$rel.Name}}Ids"].([]interface{}); ok {
+				items := []{{$rel.TargetType}}{}
 				tx.Find(&items, "id IN (?)", ids)
+
+				for k, _ := range items {
+					items[k].State = item.State
+					items[k].Del   = item.Del
+				}
+
 				association := tx.Model(&item).Association("{{$rel.MethodName}}")
 				association.Replace(items)
 			}
-
-		  // 判断是不是改变状态
-		  if oldState != item.State {
-		    if err = tx.Model(&items).Where("assigneeId = ?", item.ID).Update("state", item.State).Error; err != nil {
-		      tx.Rollback()
-		      return
-		    }
-		  }
 
 		{{end}}{{end}}
 		{{end}}
@@ -218,11 +220,11 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 			return
 		}
 
-	  // 3为删除
-	  var state int64 = 3
+	  // 2为删除
+	  var del int64 = 2
 
 	  item.UpdatedBy  = principalID
-	  item.State      = &state
+	  item.Del      	= &del
 
 		event := events.NewEvent(events.EventMetadata{
 			Type:        events.EventTypeDeleted,
@@ -241,11 +243,12 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 
 		{{range $rel := .Relationships}}
 		{{if $rel.IsToMany}}
-		  items := []{{$rel.TargetType}}{}
-		  if err = tx.Model(&items).Where("assigneeId = ?", id).Update("state", state).Error; err != nil {
+		  {{$rel.Name}} := []{{$rel.TargetType}}{}
+		  if err = tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}Id = ?", id).Update("del", del).Error; err != nil {
 		    tx.Rollback()
 		    return
 		  }
+
 		{{end}}
 		{{end}}
 

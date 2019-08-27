@@ -41,7 +41,7 @@ func createObjectDefinition(obj Object) *ast.InputObjectDefinition {
 func updateObjectDefinition(obj Object) *ast.InputObjectDefinition {
 	fields := []*ast.InputValueDefinition{}
 	for _, col := range obj.Columns() {
-		if !col.IsUpdatable() && col.Name() != "state" {
+		if !col.IsUpdatable() && col.Name() != "state" || !col.IsUpdatable() && col.Name() != "del" {
 			continue
 		}
 		fields = append(fields, &ast.InputValueDefinition{

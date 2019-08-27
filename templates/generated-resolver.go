@@ -109,6 +109,11 @@ func Create{{$obj.Name}}Handler(ctx context.Context, r *GeneratedMutationResolve
 	    input["state"] = 1
 	  }
   {{end}}
+  {{if $col.IsDel}}
+	  if input["del"] == nil {
+	    input["del"] = 1
+	  }
+  {{end}}
   {{end}}
 
 	var changes {{$obj.Name}}Changes
@@ -148,6 +153,12 @@ func Create{{$obj.Name}}Handler(ctx context.Context, r *GeneratedMutationResolve
 	if ids,ok:=input["{{$rel.Name}}Ids"].([]interface{}); ok {
 		items := []{{$rel.TargetType}}{}
 		tx.Find(&items, "id IN (?)", ids)
+
+		for k, _ := range items {
+			items[k].State = item.State
+			items[k].Del   = item.Del
+		}
+
 		association := tx.Model(&item).Association("{{$rel.MethodName}}")
 		association.Replace(items)
 	}
@@ -189,6 +200,11 @@ func Update{{$obj.Name}}Handler(ctx context.Context, r *GeneratedMutationResolve
 	    input["state"] = 1
 	  }
   {{end}}
+  {{if $col.IsDel}}
+	  if input["del"] == nil {
+	    input["del"] = 1
+	  }
+  {{end}}
   {{end}}
 
 	var changes {{$obj.Name}}Changes
@@ -211,18 +227,6 @@ func Update{{$obj.Name}}Handler(ctx context.Context, r *GeneratedMutationResolve
     return item, &errText
   }
 
-  oldItem := &{{$obj.Name}}{}
-  err = resolvers.GetItem(ctx, tx, oldItem, &id)
-  if err != nil {
-    return oldItem, err
-  }
-
-  {{range $rel := .Relationships}}
-  {{if $rel.IsToMany}}
-    oldState       := oldItem.State
-  {{end}}
-  {{end}}
-
   item.UpdatedBy = principalID
   item.ID        = id
 
@@ -244,17 +248,16 @@ func Update{{$obj.Name}}Handler(ctx context.Context, r *GeneratedMutationResolve
 	items := []{{$rel.TargetType}}{}
 	if ids,ok:=input["{{$rel.Name}}Ids"].([]interface{}); ok {
 		tx.Find(&items, "id IN (?)", ids)
+
+		for k, _ := range items {
+			items[k].State = item.State
+			items[k].Del   = item.Del
+		}
+
 		association := tx.Model(&item).Association("{{$rel.MethodName}}")
 		association.Replace(items)
 	}
 
-  // 判断是不是改变状态
-  if oldState != item.State {
-    if err = tx.Model(&items).Where("assigneeId = ?", item.ID).Update("state", item.State).Error; err != nil {
-      tx.Rollback()
-      return
-    }
-  }
 {{end}}{{end}}
 {{end}}
 
@@ -286,11 +289,11 @@ func Delete{{$obj.Name}}Handler(ctx context.Context, r *GeneratedMutationResolve
 		return
 	}
 
-  // 3为删除
-  var state int64 = 3
+  // 2为删除
+  var del int64 = 2
 
   item.UpdatedBy  = principalID
-  item.State      = &state
+  item.Del      	= &del
 
 	event := events.NewEvent(events.EventMetadata{
 		Type:        events.EventTypeDeleted,
@@ -310,7 +313,7 @@ func Delete{{$obj.Name}}Handler(ctx context.Context, r *GeneratedMutationResolve
 	{{range $rel := .Relationships}}
 	{{if $rel.IsToMany}}
 	  items := []{{$rel.TargetType}}{}
-	  if err = tx.Model(&items).Where("assigneeId = ?", id).Update("state", state).Error; err != nil {
+	  if err = tx.Model(&items).Where("{{$rel.InverseRelationshipName}}Id = ?", id).Update("del", del).Error; err != nil {
 	    tx.Rollback()
 	    return
 	  }
@@ -506,21 +509,7 @@ func {{$obj.Name}}{{$col.MethodName}}Handler(ctx context.Context,r *Generated{{$
 
 {{range $index, $rel := .Relationships}}
 func (r *Generated{{$obj.Name}}Resolver) {{$rel.MethodName}}(ctx context.Context, obj *{{$obj.Name}}) (res {{$rel.ReturnType}}, err error) {
-	{{if $rel.IsToMany}}
-	  selects := resolvers.GetFieldsRequested(ctx, strings.ToLower("{{$rel.MethodName}}"))
-
-	  items := []*{{.TargetType}}{}
-	  err = r.DB.Query().Where("state = ?", 1).Select(selects).Model(obj).Related(&items, "{{$rel.MethodName}}").Error
-	  res = items
-	{{else}}
-	  loaders := ctx.Value("loaders").(map[string]*dataloader.Loader)
-	  if obj.{{$rel.MethodName}}ID != nil {
-	    item, _err := loaders["{{$rel.Target.Name}}"].Load(ctx, dataloader.StringKey(*obj.{{$rel.MethodName}}ID))()
-	    res, _ = item.({{.ReturnType}})
-	    err = _err
-	  }
-	{{end}}
-		return
+	return r.Handlers.{{$obj.Name}}{{$rel.MethodName}}(ctx, r, obj)
 }
 func {{$obj.Name}}{{$rel.MethodName}}Handler(ctx context.Context,r *Generated{{$obj.Name}}Resolver, obj *{{$obj.Name}}) (res {{$rel.ReturnType}}, err error) {
 	{{if $rel.Target.IsExtended}}

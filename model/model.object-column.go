@@ -68,6 +68,9 @@ func (o *ObjectColumn) IsPassWord() bool {
 func (o *ObjectColumn) IsState() bool {
 	return o.Name() == "state"
 }
+func (o *ObjectColumn) IsDel() bool {
+	return o.Name() == "del"
+}
 func (o *ObjectColumn) Directive(name string) *ast.Directive {
 	for _, d := range o.Def.Directives {
 		if d.Name.Value == name {
@@ -124,7 +127,7 @@ func IndexOf(str []interface{}, data interface{}) int {
 func (o *ObjectColumn) ModelTags() string {
 	_gorm := fmt.Sprintf("column:%s;null;default:null", o.Name())
 	_valid := ""
-	dateArr := []interface{}{"createdAt", "updatedAt", "state"}
+	dateArr := []interface{}{"createdAt", "updatedAt", "state", "del"}
 
 	if o.Name() == "id" {
 		_gorm = "type:varchar(36) comment 'uuid';primary_key;NOT NULL;"
@@ -141,7 +144,12 @@ func (o *ObjectColumn) ModelTags() string {
         comment = "'更新时间';null;default:null"
       case "state":
       	tye = "type:int(2)"
-        comment = "'状态：1/正常、2/禁用、3/删除';NOT NULL;default:1;"
+        comment = "'状态：1/正常、2/禁用、3/下架';NOT NULL;default:1;"
+        _valid = "required:true;type:state;"
+      case "del":
+      	tye = "type:int(2)"
+        comment = "'状态：1/正常、2/删除';NOT NULL;default:1;"
+        _valid = "required:true;type:noOrYes;"
     }
 
     _gorm = fmt.Sprintf("%s comment %s", tye, comment)

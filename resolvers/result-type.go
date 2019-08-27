@@ -116,9 +116,9 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, alias strin
 		q = q.Order(dialect.Quote(col) + " " + direction)
 	}
 
-	wheres := []string{"state = ?"}
-	values := []interface{}{1}
-	joins := []string{}
+	wheres := []string{}
+	values := []interface{}{}
+	joins  := []string{}
 
 	err := r.Query.Apply(ctx, dialect, r.SelectionSet, &wheres, &values, &joins)
 	if err != nil {
