@@ -26,6 +26,11 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		now := time.Now()
 		item = &{{$obj.Name}}{ID: uuid.Must(uuid.NewV4()).String(), CreatedBy: principalID}
 		tx := r.DB.db.Begin()
+    defer func() {
+      if r := recover(); r != nil {
+        tx.Rollback()
+      }
+    }()
 
 		event := events.NewEvent(events.EventMetadata{
 			Type:        events.EventTypeCreated,
@@ -69,30 +74,30 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 	  {{end}}
 	  {{end}}
 
-	  errText, resErr := utils.Validator(item)
+	  errText, resErr := utils.Validator(item, "create")
 	  if resErr != nil {
 	    return item, &errText
 	  }
 
-	  if err = tx.Create(item).Error; err != nil {
+	  if err := tx.Create(item).Error; err != nil {
 	  	tx.Rollback()
-	    return
+	    return item, err
 	  }
 
 		{{range $rel := $obj.Relationships}}
 			{{if $rel.IsToMany}}{{if not $rel.Target.IsExtended}}
+        {{$rel.Name}} := []{{$rel.TargetType}}{}
 				if ids,ok:=input["{{$rel.Name}}Ids"].([]interface{}); ok {
-					items := []{{$rel.TargetType}}{}
-					tx.Find(&items, "id IN (?)", ids)
-
-					for k, _ := range items {
-						items[k].State = item.State
-						items[k].Del   = item.Del
-					}
+					tx.Find(&{{$rel.Name}}, "id IN (?)", ids)
 
 					association := tx.Model(&item).Association("{{$rel.MethodName}}")
-					association.Replace(items)
+					association.Replace({{$rel.Name}})
 				}
+
+        if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}Id = ?", item.ID).Update("state", item.State).Error; err != nil {
+          tx.Rollback()
+          return item, err
+        }
 			{{end}}{{end}}
 		{{end}}
 
@@ -116,6 +121,11 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		item = &{{$obj.Name}}{}
 		now := time.Now()
 		tx := r.DB.db.Begin()
+    defer func() {
+      if r := recover(); r != nil {
+        tx.Rollback()
+      }
+    }()
 
 		event := events.NewEvent(events.EventMetadata{
 			Type:        events.EventTypeUpdated,
@@ -153,7 +163,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		{{end}}
 		{{end}}
 
-	  errText, resErr := utils.Validator(item)
+	  errText, resErr := utils.Validator(item, "update")
 	  if resErr != nil {
 	    return item, &errText
 	  }
@@ -169,34 +179,39 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 	  {{end}}
 	  {{end}}
 
-	  if err = tx.Model(&item).Updates(item).Error; err != nil {
+	  if err := tx.Model(&item).Updates(item).Error; err != nil {
 	  	tx.Rollback()
-	    return
+	    return item, err
 	  }
 
 		{{range $rel := $obj.Relationships}}
 		{{if $rel.IsToMany}}{{if not $rel.Target.IsExtended}}
-			if ids,ok := input["{{$rel.Name}}Ids"].([]interface{}); ok {
-				items := []{{$rel.TargetType}}{}
-				tx.Find(&items, "id IN (?)", ids)
+      {{$rel.Name}} := []{{$rel.TargetType}}{}
 
-				for k, _ := range items {
-					items[k].State = item.State
-					items[k].Del   = item.Del
-				}
+			if ids,ok := input["{{$rel.Name}}Ids"].([]interface{}); ok {
+				tx.Find(&{{$rel.Name}}, "id IN (?)", ids)
 
 				association := tx.Model(&item).Association("{{$rel.MethodName}}")
-				association.Replace(items)
+				association.Replace({{$rel.Name}})
 			}
 
+      if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}Id = ?", item.ID).Update("state", item.State).Error; err != nil {
+        tx.Rollback()
+        return item, err
+      }
 		{{end}}{{end}}
 		{{end}}
 
-		err = tx.Commit().Error
-		if err != nil {
-			tx.Rollback()
-			return
-		}
+    if err := resolvers.GetItem(ctx, tx, item, &id); err != nil {
+      tx.Rollback()
+      return item, err
+    }
+
+    err = tx.Commit().Error
+    if err != nil {
+      tx.Rollback()
+      return
+    }
 
 		if len(event.Changes) > 0 {
 			err = r.EventController.SendEvent(ctx, &event)
@@ -214,10 +229,14 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		item = &{{$obj.Name}}{}
 		now := time.Now()
 		tx := r.DB.db.Begin()
+    defer func() {
+      if r := recover(); r != nil {
+        tx.Rollback()
+      }
+    }()
 
-		err = resolvers.GetItem(ctx, tx, item, &id)
-		if err != nil {
-			return
+		if err := resolvers.GetItem(ctx, tx, item, &id); err != nil {
+			return item, err
 		}
 
 	  // 2为删除
@@ -236,19 +255,18 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 
 		// err = tx.Delete(item, "{{$obj.TableName}}.id = ?", id).Error
 
-	  if err = tx.Save(item).Error; err != nil {
+	  if err := tx.Save(item).Error; err != nil {
 	  	tx.Rollback()
-	    return
+	    return item, err
 	  }
 
 		{{range $rel := .Relationships}}
 		{{if $rel.IsToMany}}
 		  {{$rel.Name}} := []{{$rel.TargetType}}{}
-		  if err = tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}Id = ?", id).Update("del", del).Error; err != nil {
+		  if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}Id = ?", id).Update("del", del).Error; err != nil {
 		    tx.Rollback()
-		    return
+		    return item, err
 		  }
-
 		{{end}}
 		{{end}}
 

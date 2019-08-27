@@ -155,7 +155,7 @@ type GeneratedQueryResolver struct{ *GeneratedResolver }
 				  selects := resolvers.GetFieldsRequested(ctx, strings.ToLower("{{$rel.MethodName}}"))
 
 				  items := []*{{.TargetType}}{}
-				  err = r.DB.Query().Where("state = ?", 1).Select(selects).Model(obj).Related(&items, "{{$rel.MethodName}}").Error
+				  err = r.DB.Query().Select(selects).Model(obj).Related(&items, "{{$rel.MethodName}}").Error
 				  res = items
 				{{else}}
 				  loaders := ctx.Value(KeyLoaders).(map[string]*dataloader.Loader)
@@ -176,7 +176,7 @@ type GeneratedQueryResolver struct{ *GeneratedResolver }
 					selects := resolvers.GetFieldsRequested(ctx, strings.ToLower("{{$rel.MethodName}}"))
 
 					items := []*{{$rel.TargetType}}{}
-					err = r.DB.Query().Where("state = ?", 1).Select(selects).Model(obj).Related(&items, "{{$rel.MethodName}}").Error
+					err = r.DB.Query().Select(selects).Model(obj).Related(&items, "{{$rel.MethodName}}").Error
 					res = items
 				{{else}}
 					loaders := ctx.Value(KeyLoaders).(map[string]*dataloader.Loader)

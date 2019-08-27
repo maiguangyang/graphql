@@ -8,7 +8,7 @@ import (
 
 // GetItem ...
 func GetItem(ctx context.Context, db *gorm.DB, out interface{}, id *string) error {
-	return db.Find(out, "id = ?", id).Error
+  return db.Find(out, "id = ?", id).Error
 }
 
 func GetItemForRelation(ctx context.Context, db *gorm.DB, obj interface{}, relation string, out interface{}) error {
