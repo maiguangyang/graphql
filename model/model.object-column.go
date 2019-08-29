@@ -127,6 +127,7 @@ func IndexOf(str []interface{}, data interface{}) int {
 func (o *ObjectColumn) ModelTags() string {
 	_gorm := fmt.Sprintf("column:%s;null;default:null", o.Name())
 	_valid := ""
+
 	dateArr := []interface{}{"createdAt", "updatedAt", "state", "del"}
 
 	if o.Name() == "id" {
@@ -172,10 +173,13 @@ func (o *ObjectColumn) ModelTags() string {
 		}
 	}
 
+	str := fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), _gorm)
+
 	if _valid != "" {
-		return fmt.Sprintf(`json:"%s" gorm:"%s" validator:"%s"`, o.Name(), _gorm, _valid)
+		str = fmt.Sprintf(`json:"%s" gorm:"%s" validator:"%s"`, o.Name(), _gorm, _valid)
 	}
-	return fmt.Sprintf(`json:"%s" gorm:"%s"`, o.Name(), _gorm)
+
+	return str
 }
 
 

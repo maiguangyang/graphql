@@ -66,6 +66,11 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 			}
 		{{end}}{{end}}
 
+	  errText, resErr := utils.Validator(item, "create")
+	  if resErr != nil {
+	    return item, &errText
+	  }
+
 	  {{range $col := .Columns}}
 	  {{if $col.IsPassWord}}
 	    if input["password"] != nil {
@@ -73,11 +78,6 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 	    }
 	  {{end}}
 	  {{end}}
-
-	  errText, resErr := utils.Validator(item, "create")
-	  if resErr != nil {
-	    return item, &errText
-	  }
 
 	  if err := tx.Create(item).Error; err != nil {
 	  	tx.Rollback()
@@ -139,11 +139,6 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 	  {{if $col.IsState}}
 		  if input["state"] == nil {
 		    input["state"] = 1
-		  }
-	  {{end}}
-	  {{if $col.IsDel}}
-		  if input["del"] == nil {
-		    input["del"] = 1
 		  }
 	  {{end}}
 	  {{end}}
