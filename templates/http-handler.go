@@ -41,7 +41,7 @@ func GetHTTPServeMux(r ResolverRoot, db *DB) *mux.Router {
 
 	playgroundHandler := handler.Playground("GraphQL playground", "/graphql")
 	mux.HandleFunc("/graphql", func(res http.ResponseWriter, req *http.Request) {
-		principalID := getPrincipalID(req)
+		principalID := getCreatedBy(req, "admin")
 		ctx := context.WithValue(req.Context(), KeyPrincipalID, principalID)
 		ctx = context.WithValue(ctx, KeyLoaders, loaders)
 		ctx = context.WithValue(ctx, KeyExecutableSchema, executableSchema)
@@ -66,6 +66,27 @@ func getJWTClaimsFromContext(ctx context.Context) *JWTClaims {
 	return v
 }
 
+func getCreatedBy(req *http.Request, role string) *string {
+	tokenStr := req.Header.Get("Authorization")
+	if tokenStr == "" {
+		return nil
+	}
+
+	res, err := middleware.DecryptToken(tokenStr, role)
+
+	if res == nil || err != nil {
+		return nil
+	}
+
+	token := res.(map[string]interface{})
+	uId := token["id"].(string)
+
+	if uId == "" {
+		return nil
+	}
+
+	return &uId
+}
 func getPrincipalID(req *http.Request) *string {
 	pID := req.Header.Get("principal-id")
 	if pID != "" {

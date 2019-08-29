@@ -94,10 +94,12 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 					association.Replace({{$rel.Name}})
 				}
 
+				{{if $rel.IsOneToMany}}
         if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}Id = ?", item.ID).Update("state", item.State).Error; err != nil {
           tx.Rollback()
           return item, err
         }
+        {{end}}
 			{{end}}{{end}}
 		{{end}}
 
@@ -190,10 +192,13 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 				association.Replace({{$rel.Name}})
 			}
 
+			{{if $rel.IsOneToMany}}
       if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}Id = ?", item.ID).Update("state", item.State).Error; err != nil {
         tx.Rollback()
         return item, err
       }
+      {{end}}
+
 		{{end}}{{end}}
 		{{end}}
 
