@@ -13,6 +13,8 @@ import (
 	"{{.Config.Package}}/utils"
 	"{{.Config.Package}}/middleware"
 	"{{.Config.Package}}/cache"
+	"{{.Config.Package}}/directive"
+
 )
 
 var RidesCache *cache.Cache
@@ -28,7 +30,11 @@ func GetHTTPServeMux(r ResolverRoot, db *DB) *mux.Router {
     log.Fatalf("cannot create APQ redis cache: %v", redisErr)
   }
 
-	executableSchema := NewExecutableSchema(Config{Resolvers: r})
+	c := Config{Resolvers: r}
+	// 检测是否显示字段
+	c.Directives.FieldShow = directive.FieldShow
+
+	executableSchema := NewExecutableSchema(c)
 	gqlHandler := handler.GraphQL(executableSchema,
 		// 中间件进行登录Token校验
 		utils.RouterIsAuthMiddleware,
