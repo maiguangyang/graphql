@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 	"github.com/99designs/gqlgen/handler"
-	"github.com/novacloudcz/graphql-orm/events"
+	"github.com/maiguangyang/graphql/events"
 	jwtgo "github.com/dgrijalva/jwt-go"
 	"github.com/rs/cors"
 	"{{.Config.Package}}/gen"

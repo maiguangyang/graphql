@@ -1,6 +1,7 @@
 package templates
 
-var DummyModel = `scalar Any
+var DummyModel = `directive @fieldShow on FIELD_DEFINITION
+scalar Any
 type User {
 	email: String @column(gorm: "type:varchar(64) comment '用户邮箱地址';default:null;") @validator(required: "true", type: "email")
 	firstName: String
@@ -12,8 +13,5 @@ type Task {
 	completed: Boolean
 	dueDate: Time
 	assignee: User @relationship(inverse:"tasks")
-}
-extend type Mutation {
-  login(email: String!): Any
 }
 `
