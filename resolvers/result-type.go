@@ -62,12 +62,16 @@ func GetFieldsRequested(ctx context.Context, alias string) []string {
 // maiguangyang new add
 func recurseSelectionSets(reqCtx *graphql.RequestContext, fields []string, selection ast.SelectionSet, alias string) []string {
 	for _, sel := range selection {
+
 		switch sel := sel.(type) {
 		case *ast.Field:
 			// ignore private field names
 			if !strings.HasPrefix(sel.Name, "__") && len(sel.SelectionSet) == 0 {
 				fields = append(fields, alias + "." + snakeString(sel.Name))
 			}
+			// else if (len(sel.SelectionSet) == 2) {
+			// 	fields = append(fields, alias + "." + sel.Name + "Id")
+			// }
 		// case *ast.InlineFragment:
 		// 	fields = recurseSelectionSets(reqCtx, fields, sel.SelectionSet)
 		// case *ast.FragmentSpread:

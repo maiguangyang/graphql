@@ -151,29 +151,11 @@ type GeneratedQueryResolver struct{ *GeneratedResolver }
 
 		{{range $index, $rel := $obj.Relationships}}
 			func (r *Generated{{$obj.Name}}Resolver) {{$rel.MethodName}}(ctx context.Context, obj *{{$obj.Name}}) (res {{$rel.ReturnType}}, err error) {
-				{{if $rel.IsToMany}}
-				  selects := resolvers.GetFieldsRequested(ctx, strings.ToLower("{{$rel.MethodName}}"))
-
-				  items := []*{{.TargetType}}{}
-				  err = r.DB.Query().Select(selects).Model(obj).Related(&items, "{{$rel.MethodName}}").Error
-				  res = items
-				{{else}}
-				  loaders := ctx.Value(KeyLoaders).(map[string]*dataloader.Loader)
-				  if obj.{{$rel.MethodName}}ID != nil {
-				    item, _err := loaders["{{$rel.Target.Name}}"].Load(ctx, dataloader.StringKey(*obj.{{$rel.MethodName}}ID))()
-				    res, _ = item.({{.ReturnType}})
-						{{if $rel.IsNonNull}}
-						if res == nil {
-							_err = fmt.Errorf("{{$rel.Target.Name}} with id '%s' not found",*obj.{{$rel.MethodName}}ID)
-						}{{end}}
-				    err = _err
-				  }
-				{{end}}
-					return
+				return r.Handlers.{{$obj.Name}}{{$rel.MethodName}}(ctx, r, obj)
 			}
 			func {{$obj.Name}}{{$rel.MethodName}}Handler(ctx context.Context,r *Generated{{$obj.Name}}Resolver, obj *{{$obj.Name}}) (res {{$rel.ReturnType}}, err error) {
 				{{if $rel.IsToMany}}
-					selects := resolvers.GetFieldsRequested(ctx, strings.ToLower("{{$rel.MethodName}}"))
+					selects := resolvers.GetFieldsRequested(ctx, strings.ToLower("{{$rel.Target.TableName}}"))
 
 					items := []*{{$rel.TargetType}}{}
 					err = r.DB.Query().Select(selects).Model(obj).Related(&items, "{{$rel.MethodName}}").Error
