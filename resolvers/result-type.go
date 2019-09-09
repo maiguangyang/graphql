@@ -1,7 +1,7 @@
 package resolvers
 
 import (
-	"fmt"
+	// "fmt"
 	"context"
 	"strings"
 
@@ -65,9 +65,8 @@ func recurseSelectionSets(reqCtx *graphql.RequestContext, fields []string, selec
 
 		switch sel := sel.(type) {
 		case *ast.Field:
-			// ignore private field names
-			fmt.Println(sel.Name, len(sel.SelectionSet))
-			if !strings.HasPrefix(sel.Name, "__") && len(sel.SelectionSet) == 0 {
+			// ignore private field names !strings.HasPrefix(sel.Name, "__") &&
+			if len(sel.SelectionSet) == 0 {
 				fields = append(fields, alias + "." + snakeString(sel.Name))
 			}
       // else if (len(sel.SelectionSet) > 0) {
