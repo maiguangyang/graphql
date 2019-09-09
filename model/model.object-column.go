@@ -112,7 +112,7 @@ func (o *ObjectColumn) GoTypeWithPointer(showPointer bool) string {
 
 	return st
 }
-
+// maiguangyang new add
 // 查找数组并返回下标
 func IndexOf(str []interface{}, data interface{}) int {
   for k, v := range str{
@@ -124,11 +124,12 @@ func IndexOf(str []interface{}, data interface{}) int {
   return - 1
 }
 
+
 func (o *ObjectColumn) ModelTags() string {
-	_gorm := fmt.Sprintf("column:%s;null;default:null", o.Name())
+	_gorm := fmt.Sprintf("default:null")
 	_valid := ""
 
-	dateArr := []interface{}{"createdAt", "updatedAt", "state", "del"}
+	dateArr := []interface{}{"createdAt", "updatedAt", "state", "del", "deletedBy", "updatedBy", "createdBy"}
 
 	if o.Name() == "id" {
 		_gorm = "type:varchar(36) comment 'uuid';primary_key;NOT NULL;"
@@ -140,9 +141,18 @@ func (o *ObjectColumn) ModelTags() string {
     comment := "null;default:null"
     switch o.Name() {
       case "createdAt":
-        comment = "'创建时间';null;default:null"
+        comment = "'创建时间';default:null"
       case "updatedAt":
-        comment = "'更新时间';null;default:null"
+        comment = "'更新时间';default:null"
+      case "deletedBy":
+      	tye = "type:varchar(36)"
+        comment = "'删除人';default:null"
+      case "updatedBy":
+      	tye = "type:varchar(36)"
+        comment = "'更新人';default:null"
+      case "createdBy":
+      	tye = "type:varchar(36)"
+        comment = "'创建人';default:null"
       case "state":
       	tye = "type:int(2)"
         comment = "'状态：1/正常、2/禁用、3/下架';NOT NULL;default:1;"

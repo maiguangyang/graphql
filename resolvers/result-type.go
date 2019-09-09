@@ -1,7 +1,7 @@
 package resolvers
 
 import (
-	// "fmt"
+	"fmt"
 	"context"
 	"strings"
 
@@ -37,26 +37,26 @@ type EntityResultType struct {
 // maiguangyang new add
 // 驼峰转蛇线
 func snakeString(s string) string {
-    data := make([]byte, 0, len(s)*2)
-    j := false
-    num := len(s)
-    for i := 0; i < num; i++ {
-        d := s[i]
-        if i > 0 && d >= 'A' && d <= 'Z' && j {
-            data = append(data, '_')
-        }
-        if d != '_' {
-            j = true
-        }
-        data = append(data, d)
+  data := make([]byte, 0, len(s)*2)
+  j := false
+  num := len(s)
+  for i := 0; i < num; i++ {
+    d := s[i]
+    if i > 0 && d >= 'A' && d <= 'Z' && j {
+      data = append(data, '_')
     }
-    return strings.ToLower(string(data[:]))
+    if d != '_' {
+      j = true
+    }
+    data = append(data, d)
+  }
+  return strings.ToLower(string(data[:]))
 }
 
 func GetFieldsRequested(ctx context.Context, alias string) []string {
-	reqCtx := graphql.GetRequestContext(ctx)
-	fieldSelections := graphql.GetResolverContext(ctx).Field.Selections
-	return recurseSelectionSets(reqCtx, []string{}, fieldSelections, alias)
+  reqCtx := graphql.GetRequestContext(ctx)
+  fieldSelections := graphql.GetResolverContext(ctx).Field.Selections
+  return recurseSelectionSets(reqCtx, []string{}, fieldSelections, alias)
 }
 
 // maiguangyang new add
@@ -66,11 +66,12 @@ func recurseSelectionSets(reqCtx *graphql.RequestContext, fields []string, selec
 		switch sel := sel.(type) {
 		case *ast.Field:
 			// ignore private field names
+			fmt.Println(sel.Name, len(sel.SelectionSet))
 			if !strings.HasPrefix(sel.Name, "__") && len(sel.SelectionSet) == 0 {
 				fields = append(fields, alias + "." + snakeString(sel.Name))
 			}
-			// else if (len(sel.SelectionSet) == 2) {
-			// 	fields = append(fields, alias + "." + sel.Name + "Id")
+      // else if (len(sel.SelectionSet) > 0) {
+			// 	fields = append(fields, alias + "." + sel.Name)
 			// }
 		// case *ast.InlineFragment:
 		// 	fields = recurseSelectionSets(reqCtx, fields, sel.SelectionSet)
