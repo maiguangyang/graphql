@@ -36,7 +36,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 			Type:        events.EventTypeCreated,
 			Entity:      "{{$obj.Name}}",
 			EntityID:    item.ID,
-			Date:        now.Unix(),
+			Date:        now.UnixNano() / 1e6,
 			PrincipalID: principalID,
 		})
 
@@ -133,7 +133,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 			Type:        events.EventTypeUpdated,
 			Entity:      "{{$obj.Name}}",
 			EntityID:    id,
-			Date:        now.Unix(),
+			Date:        now.UnixNano() / 1e6,
 			PrincipalID: principalID,
 		})
 
@@ -249,7 +249,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 			Type:        events.EventTypeDeleted,
 			Entity:      "{{$obj.Name}}",
 			EntityID:    id,
-			Date:        now.Unix(),
+			Date:        now.UnixNano() / 1e6,
 			PrincipalID: principalID,
 		})
 

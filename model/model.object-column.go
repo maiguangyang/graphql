@@ -136,13 +136,15 @@ func (o *ObjectColumn) ModelTags() string {
 	}
 
 	if IndexOf(dateArr, o.Name()) != -1 {
-		tye := "type:int(11)"
+		tye := "type:varchar(255)"
 
     comment := "null;default:null"
     switch o.Name() {
       case "createdAt":
+      	tye = "type:bigint(13)"
         comment = "'创建时间';default:null"
       case "updatedAt":
+      	tye = "type:bigint(13)"
         comment = "'更新时间';default:null"
       case "deletedBy":
       	tye = "type:varchar(36)"

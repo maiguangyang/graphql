@@ -18,7 +18,7 @@ func addExtraSpaceIfExist(str string) string {
 
 func updateTimeStampForCreateCallback(scope *gorm.Scope) {
   if !scope.HasError() {
-    now := time.Now().Unix()
+    now := time.Now().UnixNano() / 1e6
 
     if createdAtField, ok := scope.FieldByName("CreatedAt"); ok {
       if createdAtField.IsBlank {
@@ -30,7 +30,7 @@ func updateTimeStampForCreateCallback(scope *gorm.Scope) {
 
 func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
   if _, ok := scope.Get("gorm:update_column"); !ok {
-    scope.SetColumn("UpdatedAt", time.Now().Unix())
+    scope.SetColumn("UpdatedAt", time.Now().UnixNano() / 1e6)
   }
 }
 
@@ -49,7 +49,7 @@ func deleteCallback(scope *gorm.Scope) {
         scope.QuotedTableName(),
         scope.Quote(deletedAtField.DBName),
         // scope.AddToVars(NowFunc()),
-        time.Now().Unix(),
+        time.Now().UnixNano() / 1e6,
         addExtraSpaceIfExist(scope.CombinedConditionSql()),
         addExtraSpaceIfExist(extraOption),
       )).Exec()

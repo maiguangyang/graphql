@@ -84,7 +84,7 @@ type GeneratedQueryResolver struct{ *GeneratedResolver }
 
 		var selectionSet *ast.SelectionSet
 		for _, f := range graphql.CollectFieldsCtx(ctx, nil) {
-			if f.Field.Name == "items" {
+			if f.Field.Name == "data" {
 				selectionSet = &f.Field.SelectionSet
 			}
 		}

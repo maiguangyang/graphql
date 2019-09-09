@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/iancoleman/strcase"
+	// "github.com/iancoleman/strcase"
 	"github.com/vektah/gqlparser/ast"
 
 	"github.com/jinzhu/gorm"
@@ -20,6 +20,14 @@ type EntityFilterQuery interface {
 }
 type EntitySort interface {
 	String() string
+}
+
+type Created struct {
+  name string
+}
+
+func (b Created) String() string {
+  return "CREATED_AT_DESC"
 }
 
 type EntityResultType struct {
@@ -83,6 +91,15 @@ func recurseSelectionSets(reqCtx *graphql.RequestContext, fields []string, selec
 	return fields
 }
 
+// 查找数组并返回下标
+func indexOf(str []EntitySort, data string) int {
+  for k, v := range str{
+    if v.String() == data {
+      return k
+    }
+  }
+  return - 1
+}
 
 // GetResultTypeItems ...
 func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, alias string, out interface{}) error {
@@ -110,14 +127,32 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, alias strin
 
 	dialect := q.Dialect()
 
+  // 以前是改写排序
+  var _newSort []EntitySort
+  // 判断是否有创建时间排序，没有的话，追加一个默认值
+	if indexOf(r.Sort, "CREATED_AT_DESC") == -1 && indexOf(r.Sort, "CREATED_AT_ASC") == -1 {
+    var created Created
+    var _sort EntitySort = created
+
+    _newSort = append(_newSort, _sort)
+	}
+
+  for _, v := range r.Sort {
+    _newSort = append(_newSort, v)
+  }
+  r.Sort = _newSort
+
+  // 原来的代码
 	for _, s := range r.Sort {
 		direction := "ASC"
 		_s := s.String()
 		if strings.HasSuffix(_s, "_DESC") {
 			direction = "DESC"
 		}
-		col := strcase.ToLowerCamel(strings.ToLower(strings.TrimSuffix(_s, "_"+direction)))
-		q = q.Order(dialect.Quote(col) + " " + direction)
+
+    // strcase.ToLowerCamel(
+    col := strings.ToLower(strings.TrimSuffix(_s, "_"+direction))
+    q = q.Order(dialect.Quote(col) + " " + direction)
 	}
 
 	wheres := []string{}
