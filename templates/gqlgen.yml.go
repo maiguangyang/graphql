@@ -16,7 +16,7 @@ resolver:
   package: gen
 
 models:
-  {{range $obj := .Model.Objects}}
+  {{range $obj := .Model.ObjectEntities}}
   {{$obj.Name}}:
     model: {{$config.Package}}/gen.{{$obj.Name}}
     fields:{{range $col := $obj.Columns}}{{if $col.IsReadonlyType}}
@@ -36,7 +36,7 @@ models:
   {{$obj.Name}}UpdateInput:
     model: "map[string]interface{}"
   {{end}}
-  
+
   {{range $ext := .Model.ObjectExtensions}}{{$obj := $ext.Object}}{{if not $ext.ExtendsLocalObject}}
   {{$obj.Name}}:
     fields:{{range $col := $obj.Columns}}{{if $col.IsReadonlyType}}

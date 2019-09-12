@@ -21,7 +21,19 @@ func (m *Model) Objects() []Object {
 	}
 	return objs
 }
-
+func (m *Model) ObjectEntities() []Object {
+  objs := []Object{}
+  for _, def := range m.Doc.Definitions {
+    def, ok := def.(*ast.ObjectDefinition)
+    if ok {
+      obj := Object{Def: def, Model: m}
+      if obj.HasDirective("entity") {
+        objs = append(objs, obj)
+      }
+    }
+  }
+  return objs
+}
 func (m *Model) ObjectExtensions() []ObjectExtension {
 	objs := []ObjectExtension{}
 	for _, def := range m.Doc.Definitions {
@@ -43,12 +55,30 @@ func (m *Model) Object(name string) Object {
 	panic(fmt.Sprintf("Object with name %s not found in model", name))
 }
 
+func (m *Model) ObjectExtension(name string) ObjectExtension {
+	for _, e := range m.ObjectExtensions() {
+		if e.Object.Name() == name {
+			return e
+		}
+	}
+	panic(fmt.Sprintf("Extension for object with name %s not found in model", name))
+}
+
 func (m *Model) HasObject(name string) bool {
 	if name == "Query" || name == "Mutation" || name == "Subscription" {
 		return true
 	}
 	for _, o := range m.Objects() {
 		if o.Name() == name {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *Model) HasObjectExtension(name string) bool {
+	for _, e := range m.ObjectExtensions() {
+		if e.Object.Name() == name {
 			return true
 		}
 	}

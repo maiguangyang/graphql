@@ -13,7 +13,7 @@ import (
 )
 
 
-{{range $object := .Model.Objects}}
+{{range $object := .Model.ObjectEntities}}
 
 type {{.Name}}ResultType struct {
 	resolvers.EntityResultType

@@ -10,7 +10,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-{{range $obj := .Model.Objects}}
+{{range $obj := .Model.ObjectEntities}}
 {{if not $obj.IsExtended}}
 func (f *{{$obj.Name}}FilterType) Apply(ctx context.Context, dialect gorm.Dialect, wheres *[]string, values *[]interface{}, joins *[]string) error {
 	return f.ApplyWithAlias(ctx, dialect, "{{$obj.TableName}}", wheres, values, joins)
