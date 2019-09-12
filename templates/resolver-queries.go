@@ -44,11 +44,11 @@ type GeneratedQueryResolver struct{ *GeneratedResolver }
 		}
 		qb := r.DB.Query()
 		if opts.ID != nil {
-			qb = qb.Where("{{$obj.TableName}}.id = ?", *opts.ID)
+			qb = qb.Where(TableName("{{$obj.TableName}}") + ".id = ?", *opts.ID)
 		}
 
 		var items []*{{$obj.Name}}
-		err := rt.GetData(ctx, qb, "{{$obj.TableName}}", &items)
+		err := rt.GetData(ctx, qb, TableName("{{$obj.TableName}}"), &items)
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +104,7 @@ type GeneratedQueryResolver struct{ *GeneratedResolver }
 	type Generated{{$obj.Name}}ResultTypeResolver struct{ *GeneratedResolver }
 
 	func (r *Generated{{$obj.Name}}ResultTypeResolver) Data(ctx context.Context, obj *{{$obj.Name}}ResultType) (items []*{{$obj.Name}}, err error) {
-	  err = obj.GetData(ctx, r.DB.db, "{{$obj.TableName}}", &items)
+	  err = obj.GetData(ctx, r.DB.db, TableName("{{$obj.TableName}}"), &items)
 	  return
 	}
 
@@ -155,7 +155,7 @@ type GeneratedQueryResolver struct{ *GeneratedResolver }
 			}
 			func {{$obj.Name}}{{$rel.MethodName}}Handler(ctx context.Context,r *Generated{{$obj.Name}}Resolver, obj *{{$obj.Name}}) (res {{$rel.ReturnType}}, err error) {
 				{{if $rel.IsToMany}}
-					selects := resolvers.GetFieldsRequested(ctx, strings.ToLower("{{$rel.Target.TableName}}"))
+					selects := resolvers.GetFieldsRequested(ctx, strings.ToLower(TableName("{{$rel.Target.TableName}}")))
 
 					items := []*{{$rel.TargetType}}{}
 					err = r.DB.Query().Select(selects).Model(obj).Related(&items, "{{$rel.MethodName}}").Error
@@ -179,7 +179,7 @@ type GeneratedQueryResolver struct{ *GeneratedResolver }
 					ids = []string{}
 
 					items := []*{{$rel.TargetType}}{}
-					err = r.DB.Query().Model(obj).Select("{{$rel.Target.TableName}}.id").Related(&items, "{{$rel.MethodName}}").Error
+					err = r.DB.Query().Model(obj).Select(TableName("{{$rel.Target.TableName}}") + ".id").Related(&items, "{{$rel.MethodName}}").Error
 
 					for _, item := range items {
 						ids = append(ids, item.ID)

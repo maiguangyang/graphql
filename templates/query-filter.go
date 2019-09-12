@@ -36,7 +36,7 @@ func (qf *{{$object.Name}}QueryFilter) Apply(ctx context.Context, dialect gorm.D
 	queryParts := strings.Split(*qf.Query, " ")
 	for _, part := range queryParts {
 		ors := []string{}
-		if err := qf.applyQueryWithFields(dialect, fields, part, "{{$object.TableName}}", &ors, values, joins); err != nil {
+		if err := qf.applyQueryWithFields(dialect, fields, part, TableName("{{$object.TableName}}"), &ors, values, joins); err != nil {
 			return err
 		}
 		*wheres = append(*wheres, "("+strings.Join(ors, " OR ")+")")
@@ -48,7 +48,7 @@ func (qf *{{$object.Name}}QueryFilter) applyQueryWithFields(dialect gorm.Dialect
 	if len(fields) == 0 {
 		return nil
 	}
-	
+
 	fieldsMap := map[string][]*ast.Field{}
 	for _, f := range fields {
 		fieldsMap[f.Name] = append(fieldsMap[f.Name],f)
@@ -67,7 +67,7 @@ func (qf *{{$object.Name}}QueryFilter) applyQueryWithFields(dialect gorm.Dialect
 		_fields := []*ast.Field{}
 		_alias := alias + "_{{$rel.Name}}"
 		*joins = append(*joins,{{$rel.JoinString}})
-		
+
 		for _, f := range fs {
 			for _, s := range f.SelectionSet {
 				if f, ok := s.(*ast.Field); ok {
@@ -82,7 +82,7 @@ func (qf *{{$object.Name}}QueryFilter) applyQueryWithFields(dialect gorm.Dialect
 		}
 	}
 	{{end}}
-	
+
 	return nil
 }
 

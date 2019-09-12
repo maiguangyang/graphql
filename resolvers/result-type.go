@@ -188,7 +188,6 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, alias strin
 		q = q.Joins(join)
 	}
 
-	q = q.Group(alias + ".id")
 	return q.Find(out).Error
 }
 
