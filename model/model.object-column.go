@@ -9,12 +9,13 @@ import (
 )
 
 var goTypeMap = map[string]string{
-	"String":  "string",
-	"Time":    "time.Time",
-	"ID":      "string",
-	"Float":   "float64",
-	"Int":     "int64",
-	"Boolean": "bool",
+	"String"  :  "string",
+	"Time"    :  "time.Time",
+	"ID"      :  "string",
+	"Float"   :  "float64",
+	"Int"     :  "int64",
+	"Boolean" :  "bool",
+	"Any"     :  "interface{}",
 }
 
 type ObjectColumn struct {

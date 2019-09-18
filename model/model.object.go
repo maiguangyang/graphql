@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/jinzhu/inflection"
@@ -14,6 +15,14 @@ type Object struct {
 	Def       *ast.ObjectDefinition
 	Model     *Model
 	Extension *ObjectExtension
+}
+
+func TableName(name string) string {
+	prefix := os.Getenv("TABLE_NAME_PREFIX")
+	if prefix != "" {
+		return prefix + "_" + name
+	}
+	return name
 }
 
 func (o *Object) Name() string {

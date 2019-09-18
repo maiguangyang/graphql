@@ -3,6 +3,7 @@ package templates
 var Database = `package gen
 import (
 	"fmt"
+	"os"
 	"net/url"
 	"strings"
 	"github.com/jinzhu/gorm"

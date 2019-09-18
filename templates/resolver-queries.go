@@ -108,6 +108,20 @@ type GeneratedQueryResolver struct{ *GeneratedResolver }
 	  return
 	}
 
+	func (r *Generated{{$obj.Name}}ResultTypeResolver) Pages(ctx context.Context, obj *{{$obj.Name}}ResultType) (interface{}, error) {
+    total, _       := r.Total(ctx, obj)
+    totalPage, _   := r.TotalPage(ctx, obj)
+    perPage, _     := r.PerPage(ctx, obj)
+    currentPage, _ := r.CurrentPage(ctx, obj)
+
+    return map[string]int{
+      "total"        : total,
+      "total_page"   : totalPage,
+      "per_page"     : perPage,
+      "current_page" : currentPage,
+    }, nil
+	}
+
 	func (r *Generated{{$obj.Name}}ResultTypeResolver) Total(ctx context.Context, obj *{{$obj.Name}}ResultType) (count int, err error) {
 	  return obj.GetTotal(ctx, r.DB.db, &{{$obj.Name}}{})
 	}
