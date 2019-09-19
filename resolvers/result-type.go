@@ -152,7 +152,7 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, alias strin
 
     // strcase.ToLowerCamel(
     col := strings.ToLower(strings.TrimSuffix(_s, "_"+direction))
-    q = q.Order(dialect.Quote(col) + " " + direction)
+    q = q.Order(alias + "." + dialect.Quote(col) + " " + direction)
 	}
 
 	wheres := []string{}

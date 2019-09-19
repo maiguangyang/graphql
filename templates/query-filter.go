@@ -57,7 +57,7 @@ func (qf *{{$object.Name}}QueryFilter) applyQueryWithFields(dialect gorm.Dialect
 	{{range $col := $object.Columns}}{{if $col.IsSearchable}}
 	if _, ok := fieldsMap["{{$col.Name}}"]; ok {
 		*ors = append(*ors, fmt.Sprintf("%[1]s"+dialect.Quote("{{$col.Name}}")+" LIKE ? OR %[1]s"+dialect.Quote("{{$col.Name}}")+" LIKE ?", dialect.Quote(alias) + "."))
-		*values = append(*values, fmt.Sprintf("%s%%", query), fmt.Sprintf("%% %s%%", query))
+		*values = append(*values, fmt.Sprintf("%s%%", query), fmt.Sprintf("%%%s%%", query))
 	}
 	{{end}}
 	{{end}}
