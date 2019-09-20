@@ -95,7 +95,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 				}
 
 				{{if $rel.IsOneToMany}}
-        if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}Id = ?", item.ID).Update("state", item.State).Error; err != nil {
+        if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}_id = ?", item.ID).Update("state", item.State).Error; err != nil {
           tx.Rollback()
           return item, err
         }
@@ -192,8 +192,8 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 				association.Replace({{$rel.Name}})
 			}
 
-			{{if $rel.IsOneToMany}}
-      if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}Id = ?", item.ID).Update("state", item.State).Error; err != nil {
+      {{if $rel.IsToMany}}
+      if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}_id = ?", item.ID).Update("state", item.State).Error; err != nil {
         tx.Rollback()
         return item, err
       }
@@ -263,7 +263,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		{{range $rel := .Relationships}}
 		{{if $rel.IsToMany}}
 		  {{$rel.Name}} := []{{$rel.TargetType}}{}
-		  if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}Id = ?", id).Update("del", del).Error; err != nil {
+		  if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}_id = ?", id).Update("del", del).Error; err != nil {
 		    tx.Rollback()
 		    return item, err
 		  }
