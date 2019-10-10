@@ -179,7 +179,7 @@ func (o *ObjectColumn) ModelTags() string {
 			}
 		} else if d.Name.Value == "validator" {
 			for _, arg := range d.Arguments {
-				if arg.Name.Value == "required" && arg.Value.GetValue() != nil || arg.Name.Value == "type" && arg.Value.GetValue() != nil {
+				if arg.Name.Value == "required" && arg.Value.GetValue() != nil || arg.Name.Value == "type" && arg.Value.GetValue() != nil || arg.Name.Value == "repeat" && arg.Value.GetValue() != nil {
 					_valid += fmt.Sprintf("%v", arg.Name.Value + ":" + arg.Value.GetValue().(string) + ";")
 				}
 			}

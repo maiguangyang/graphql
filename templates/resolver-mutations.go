@@ -3,6 +3,7 @@ package templates
 var ResolverMutations = `package gen
 
 import (
+  "fmt"
 	"context"
 	"time"
 
@@ -66,10 +67,25 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 			}
 		{{end}}{{end}}
 
-	  errText, resErr := utils.Validator(item, "create")
+	  errText, repeat, resErr := utils.Validator(item, "create")
 	  if resErr != nil {
 	    return item, &errText
 	  }
+
+    // 这里处理是否允许字段重复存在
+    if len(repeat) > 0 {
+      whereData := ""
+      whereValue :=  []interface{}{}
+      for _, v := range repeat {
+        whereData = utils.IsWhereEmpty(whereData, v + " = ?")
+        whereValue = append(whereValue, input[v])
+      }
+
+      first := &{{$obj.Name}}{}
+      if err := tx.Where(whereData, whereValue...).First(&first).Error; err == nil {
+        return item, fmt.Errorf("已存在重复数据")
+      }
+    }
 
 	  {{range $col := .Columns}}
 	  {{if $col.IsPassWord}}
@@ -160,10 +176,25 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		{{end}}
 		{{end}}
 
-	  errText, resErr := utils.Validator(item, "update")
+	  errText, repeat, resErr := utils.Validator(item, "update")
 	  if resErr != nil {
 	    return item, &errText
 	  }
+
+    // 这里处理是否允许字段重复存在
+    if len(repeat) > 0 {
+      whereData := "id <> ?"
+      whereValue :=  []interface{}{id}
+      for _, v := range repeat {
+        whereData = utils.IsWhereEmpty(whereData, v + " = ?")
+        whereValue = append(whereValue, input[v])
+      }
+
+      first := &{{$obj.Name}}{}
+      if err := tx.Where(whereData, whereValue...).First(&first).Error; err == nil {
+        return item, fmt.Errorf("已存在重复数据")
+      }
+    }
 
 	  item.UpdatedBy = principalID
 	  item.ID        = id
