@@ -83,7 +83,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 
       first := &{{$obj.Name}}{}
       if err := tx.Where(whereData, whereValue...).First(&first).Error; err == nil {
-        return item, fmt.Errorf("已存在重复数据")
+        return item, fmt.Errorf("exist")
       }
     }
 
@@ -192,7 +192,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 
       first := &{{$obj.Name}}{}
       if err := tx.Where(whereData, whereValue...).First(&first).Error; err == nil {
-        return item, fmt.Errorf("已存在重复数据")
+        return item, fmt.Errorf("exist")
       }
     }
 
