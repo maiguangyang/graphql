@@ -223,7 +223,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 				association.Replace({{$rel.Name}})
 			}
 
-      {{if $rel.IsToMany}}
+      {{if $rel.IsOneToMany}}
       if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}_id = ?", item.ID).Update("state", item.State).Error; err != nil {
         tx.Rollback()
         return item, err
