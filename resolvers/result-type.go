@@ -101,12 +101,27 @@ func indexOf(str []EntitySort, data string) int {
   return - 1
 }
 
+// 查找数组并返回下标
+func IndexOfTwo(str []string, data interface{}) int {
+  for k, v := range str{
+    if v == data {
+      return k
+    }
+  }
+
+  return - 1
+}
+
+
 // GetResultTypeItems ...
 func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, alias string, out interface{}) error {
 	q := db
 
 	// 麦广扬添加
 	selects := GetFieldsRequested(ctx, alias)
+	if IndexOfTwo(selects, alias + ".id") == -1 {
+		selects = append(selects, alias + ".id")
+	}
 
 	if len(selects) > 0 {
 		q = q.Select(selects)
