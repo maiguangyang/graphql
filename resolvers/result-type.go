@@ -119,7 +119,7 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, alias strin
 
 	// 麦广扬添加
 	selects := GetFieldsRequested(ctx, alias)
-	if IndexOfTwo(selects, alias + ".id") == -1 {
+	if len(selects) > 0 && IndexOfTwo(selects, alias + ".id") == -1 {
 		selects = append(selects, alias + ".id")
 	}
 
