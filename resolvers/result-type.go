@@ -70,9 +70,17 @@ func GetFieldsRequested(ctx context.Context, alias string) []string {
 // maiguangyang new add
 func recurseSelectionSets(reqCtx *graphql.RequestContext, fields []string, selection ast.SelectionSet, alias string) []string {
 	for _, sel := range selection {
-
 		switch sel := sel.(type) {
 		case *ast.Field:
+
+      if len(sel.ObjectDefinition.Fields) > 0 {
+  			for _, child := range sel.ObjectDefinition.Fields {
+          // fmt.Println("child:", child.Name, child.Type.Elem == nil, child.Type.Elem, child.Type.Name(), child.Type.String())
+          if child.Type.Elem == nil &&  child.Name != "assignee" {
+            fields = append(fields, alias + "." + snakeString(child.Name))
+          }
+  			}
+      }
 			// ignore private field names !strings.HasPrefix(sel.Name, "__") &&
 			if !strings.HasPrefix(sel.Name, "__") && len(sel.SelectionSet) == 0 {
 				fields = append(fields, alias + "." + snakeString(sel.Name))

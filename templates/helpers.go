@@ -43,3 +43,39 @@ func WriteTemplateRaw(t, filename string, data interface{}) error {
 	}
 	return nil
 }
+
+// 生成前端接口接口
+func WriteInterfaceTemplate(t, filename string, data TemplateData) error {
+	return WriteInterfaceTemplateRaw(t, filename, data)
+}
+
+func WriteInterfaceTemplateRaw(t, filename string, data interface{}) error {
+  temp, err := template.New(filename).Parse(t)
+  if err != nil {
+    return err
+  }
+
+  // type Inventory struct {
+  //   Material string
+  //   Count    uint
+  // }
+
+  // sweaters := Inventory{"wool", 17}
+  // temp, err := template.New("test").Parse("{{.Count}} items are made of {{.Material}}")
+  // if err != nil {
+  //   return err
+  // }
+
+  var content bytes.Buffer
+  writer := io.Writer(&content)
+
+  err = temp.Execute(writer, &data)
+  if err != nil {
+    return err
+  }
+  err = ioutil.WriteFile(filename, content.Bytes(), 0777)
+  if err != nil {
+    return err
+  }
+  return nil
+}
