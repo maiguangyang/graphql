@@ -11,8 +11,11 @@ var Graphql = `{{range $obj := .Model.Objects}}
   # 列表
   query {{.Name}}s ($currentPage: Int = 1, $perPage: Int = 20, $sort: [{{.Name}}SortType!], $search: String, $filter: {{.Name}}FilterType) {
     {{$obj.LowerName}}s(current_page: $currentPage, per_page: $perPage, sort: $sort, q: $search, filter: $filter) {
-      data {
-        ...{{$obj.PluralName}}Fields
+      data { {{range $col := $obj.Columns}}
+          {{$col.Name}}{{end}}{{range $rel := $obj.Relationships}}{{if $rel.IsToMany}}
+          {{$rel.Name}} {
+            ...{{$rel.Target.Name}}sFields
+        }{{end}}{{end}}
       }
       current_page
       per_page
