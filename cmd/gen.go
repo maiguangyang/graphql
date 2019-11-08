@@ -57,10 +57,18 @@ func generate(filename, p string) error {
 		return err
 	}
 
-  err = generateInterface(&m, &c)
+  // 接口
+  err = generateInterface(p, &m, &c)
   if err != nil {
     return err
   }
+
+  // 接口文档
+  err = generateInterfaceDocument(p, &m, &c)
+  if err != nil {
+    return err
+  }
+
 
 	err = model.EnrichModel(&m)
 	if err != nil {
@@ -123,15 +131,15 @@ func ensureDir(dir string) {
 }
 
 // 生成前端接口接口
-func generateInterface(m *model.Model, c *model.Config) error {
+func generateInterface(p string, m *model.Model, c *model.Config) error {
   data := templates.TemplateData{Model: m, Config: c}
+  return templates.WriteInterfaceTemplate(templates.Graphql, path.Join(p, "graphql/graphql.gql"), data)
+}
 
-  graphql := templates.Graphql
-  return templates.WriteInterfaceTemplate(graphql, path.Join(".", "graphql/graphql.gql"), data)
-  // 自动生成前端接口文件
-  // if err := templates.WriteTemplate(templates.graphql, path.Join(p, "graphql/resolver_gen.go"), data); err != nil {
-  //   return err
-  // }
+// 生成前端接口接口文档
+func generateInterfaceDocument(p string, m *model.Model, c *model.Config) error {
+  data := templates.TemplateData{Model: m, Config: c}
+  return templates.WriteInterfaceTemplate(templates.GraphqlApi, path.Join(p, "graphql/api.json"), data)
 }
 
 func generateFiles(p string, m *model.Model, c *model.Config) error {

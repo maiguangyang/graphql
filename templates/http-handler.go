@@ -32,7 +32,7 @@ func GetHTTPServeMux(r ResolverRoot, db *DB) *mux.Router {
 
 	c := Config{Resolvers: r}
 	// 检测是否显示字段
-	c.Directives.FieldShow = directive.FieldShow
+	// c.Directives.FieldShow = directive.FieldShow
 
 	executableSchema := NewExecutableSchema(c)
 	gqlHandler := handler.GraphQL(executableSchema,
