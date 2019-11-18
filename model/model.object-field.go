@@ -105,6 +105,9 @@ func (o *ObjectField) IsState() bool {
 func (o *ObjectField) IsDel() bool {
 	return o.Name() == "del"
 }
+func (o *ObjectField) IsRequired() bool {
+	return isNonNullType(o.Def.Type)
+}
 func (o *ObjectField) Directive(name string) *ast.Directive {
 	for _, d := range o.Def.Directives {
 		if d.Name.Value == name {
@@ -160,6 +163,90 @@ func (o *ObjectField) GoTypeWithPointer(showPointer bool) string {
 }
 
 // maiguangyang new add
+func (o *ObjectField) GetArgValue(name string) string {
+	for _, d := range o.Def.Directives {
+		if d.Name.Value == name {
+			if len(d.Arguments) > 0 {
+				column := d.Arguments[0].Value.GetValue()
+				return column.(string)
+			}
+		}
+	}
+
+	return ""
+}
+
+// 获取字段说明
+func (o *ObjectField) GetComment() string {
+	value   := o.GetArgValue("column")
+	str := ""
+
+	if value != "" {
+		str = RegexpReplace(value, `comment '`, `';`)
+	} else {
+    switch o.Name() {
+      case "id":
+        str = "uuid"
+      case "createdAt":
+        str = "创建时间"
+      case "updatedAt":
+        str = "更新时间"
+      case "deletedBy":
+        str = "删除人"
+      case "updatedBy":
+        str = "更新人"
+      case "createdBy":
+        str = "创建人"
+      case "state":
+        str = "状态：1/正常、2/禁用、3/下架"
+      case "del":
+        str = "状态：1/正常、2/删除"
+    }
+	}
+	return str
+}
+
+// 备注说明字段
+func (o *ObjectField) GetRemark() string {
+	str := ""
+  switch o.Name() {
+    case "id":
+      str = "create方法不是必填"
+  }
+	return str
+}
+
+// 获取字段说明
+func (o *ObjectField) GetType() string {
+	value   := o.GetArgValue("column")
+	str := ""
+
+	if value != "" {
+		fmt.Println(value)
+		str = RegexpReplace(value, `type:`, ` `)
+	} else {
+    switch o.Name() {
+      case "id":
+        str = "varchar(36)"
+      case "createdAt":
+        str = "bigint(13)"
+      case "updatedAt":
+        str = "bigint(13)"
+      case "deletedBy":
+        str = "varchar(36)"
+      case "updatedBy":
+        str = "varchar(36)"
+      case "createdBy":
+        str = "varchar(36)"
+      case "state":
+        str = "int(2)"
+      case "del":
+        str = "int(2)"
+    }
+	}
+	return str
+}
+
 // 查找数组并返回下标
 func IndexOf(str []interface{}, data interface{}) int {
   for k, v := range str{

@@ -11,25 +11,6 @@ type Model struct {
 	// Objects []Object
 }
 
-func (m *Model) ObjectsEntity() string {
-	// filed := m.Doc.Definitions[0].(*ast.DirectiveDefinition)
-	// fmt.Println(filed)
-	// fmt.Println(filed.Arguments[0].Description)
-	for _, def := range m.Doc.Definitions {
-		def, ok := def.(*ast.ObjectDefinition)
-		if ok {
-			if len(def.Directives[0].Arguments) > 0 {
-				title := def.Directives[0].Arguments[0].Value.GetValue()
-				return title.(string)
-			} else {
-				return ""
-			}
-		}
-	}
-
-	return ""
-}
-
 func (m *Model) Objects() []Object {
 	objs := []Object{}
 
