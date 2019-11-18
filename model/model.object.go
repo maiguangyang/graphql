@@ -22,7 +22,7 @@ func (o *Object) EntityName() string {
 		title := o.Def.Directives[0].Arguments[0].Value.GetValue()
 		return title.(string)
 	}
-	return ""
+	return o.Name()
 }
 
 func (o *Object) Name() string {
