@@ -14,7 +14,6 @@ import (
 	"{{.Config.Package}}/middleware"
 	"{{.Config.Package}}/cache"
 	"{{.Config.Package}}/directive"
-
 )
 
 var RidesCache *cache.Cache
@@ -35,6 +34,7 @@ func GetHTTPServeMux(r ResolverRoot, db *DB) *mux.Router {
 	// c.Directives.FieldShow = directive.FieldShow
 
 	executableSchema := NewExecutableSchema(c)
+
 	gqlHandler := handler.GraphQL(executableSchema,
 		// 中间件进行登录Token校验
 		utils.RouterIsAuthMiddleware,
@@ -63,13 +63,14 @@ func GetHTTPServeMux(r ResolverRoot, db *DB) *mux.Router {
 	return handler
 }
 
-func getPrincipalIDFromContext(ctx context.Context) *string {
+func GetPrincipalIDFromContext(ctx context.Context) *string {
 	v, _ := ctx.Value(KeyPrincipalID).(*string)
 	return v
 }
-func getJWTClaimsFromContext(ctx context.Context) *JWTClaims {
-	v, _ := ctx.Value(KeyJWTClaims).(*JWTClaims)
-	return v
+
+func GetJWTClaimsFromContext(ctx context.Context) *JWTClaims {
+	val, _ := ctx.Value(KeyJWTClaims).(*JWTClaims)
+	return val
 }
 
 func getCreatedBy(req *http.Request, role string) *string {
@@ -93,17 +94,6 @@ func getCreatedBy(req *http.Request, role string) *string {
 
 	return &uId
 }
-func getPrincipalID(req *http.Request) *string {
-	pID := req.Header.Get("principal-id")
-	if pID != "" {
-		return &pID
-	}
-	c, _ := getJWTClaims(req)
-	if c == nil {
-		return nil
-	}
-	return &c.Subject
-}
 
 type JWTClaims struct {
 	jwtgo.StandardClaims
@@ -123,4 +113,19 @@ func getJWTClaims(req *http.Request) (*JWTClaims, error) {
 	return p, nil
 }
 
+func (c *JWTClaims) Scopes() []string {
+	s := c.Scope
+	if s != nil && len(*s) > 0 {
+		return strings.Split(*s, " ")
+	}
+	return []string{}
+}
+func (c *JWTClaims) HasScope(scope string) bool {
+	for _, s := range c.Scopes() {
+		if s == scope {
+			return true
+		}
+	}
+	return false
+}
 `

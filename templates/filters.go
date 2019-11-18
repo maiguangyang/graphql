@@ -10,8 +10,18 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-{{range $obj := .Model.Objects}}
+{{range $obj := .Model.ObjectEntities}}
 {{if not $obj.IsExtended}}
+func (f *{{$obj.Name}}FilterType) IsEmpty(ctx context.Context, dialect gorm.Dialect) bool {
+	wheres := []string{}
+	values := []interface{}{}
+	joins := []string{}
+	err := f.ApplyWithAlias(ctx, dialect, "companies", &wheres, &values, &joins)
+	if err != nil {
+		panic(err)
+	}
+	return len(wheres) == 0
+}
 func (f *{{$obj.Name}}FilterType) Apply(ctx context.Context, dialect gorm.Dialect, wheres *[]string, values *[]interface{}, joins *[]string) error {
 	return f.ApplyWithAlias(ctx, dialect, TableName("{{$obj.TableName}}"), wheres, values, joins)
 }
@@ -20,7 +30,7 @@ func (f *{{$obj.Name}}FilterType) ApplyWithAlias(ctx context.Context, dialect go
 		return nil
 	}
 	aliasPrefix := dialect.Quote(alias) + "."
-
+	
 	_where, _values := f.WhereContent(dialect, aliasPrefix)
 	*wheres = append(*wheres, _where...)
 	*values = append(*values, _values...)
@@ -30,10 +40,12 @@ func (f *{{$obj.Name}}FilterType) ApplyWithAlias(ctx context.Context, dialect go
 		vs := []interface{}{}
 		js := []string{}
 		for _, or := range f.Or {
-			err := or.ApplyWithAlias(ctx, dialect, alias, &cs, &vs, &js)
+			_cs := []string{}
+			err := or.ApplyWithAlias(ctx, dialect, alias, &_cs, &vs, &js)
 			if err != nil {
 				return err
 			}
+			cs = append(cs, strings.Join(_cs, " AND "))
 		}
 		if len(cs) > 0 {
 			*wheres = append(*wheres, "("+strings.Join(cs, " OR ")+")")
@@ -57,7 +69,7 @@ func (f *{{$obj.Name}}FilterType) ApplyWithAlias(ctx context.Context, dialect go
 		*values = append(*values, vs...)
 		*joins = append(*joins, js...)
 	}
-
+	
 	{{range $rel := $obj.Relationships}}
 	{{if not $rel.Target.IsExtended}}
 	{{$varName := (printf "f.%s" $rel.MethodName)}}
@@ -77,12 +89,22 @@ func (f *{{$obj.Name}}FilterType) WhereContent(dialect gorm.Dialect, aliasPrefix
 	conditions = []string{}
 	values = []interface{}{}
 
-{{range $col := $obj.Columns}}{{if $col.IsWritableType}}
-{{range $fm := $col.FilterMapping}} {{$varName := (printf "f.%s%s" $col.MethodName $fm.SuffixCamel)}}
-	if {{$varName}} != nil {
-		conditions = append(conditions, aliasPrefix + dialect.Quote("{{$col.Name}}")+" {{$fm.Operator}}")
-		values = append(values, {{$fm.WrapValueVariable $varName}})
-	}{{end}}{{end}}{{end}}
+	{{range $col := $obj.Columns}}{{if $col.IsWritableType}}
+		{{range $fm := $col.FilterMapping}} {{$varName := (printf "f.%s%s" $col.MethodName $fm.SuffixCamel)}}
+			if {{$varName}} != nil {
+				conditions = append(conditions, aliasPrefix + dialect.Quote("{{$col.Name}}")+" {{$fm.Operator}}")
+				values = append(values, {{$fm.WrapValueVariable $varName}})
+			}
+		{{end}}
+		if f.{{$col.MethodName}}Null != nil {
+			if *f.{{$col.MethodName}}Null {
+				conditions = append(conditions, aliasPrefix+dialect.Quote("{{$col.Name}}")+" IS NULL")
+			} else {
+				conditions = append(conditions, aliasPrefix+dialect.Quote("{{$col.Name}}")+" IS NOT NULL")
+			}
+		}
+	{{end}}
+{{end}}
 
 	return
 }

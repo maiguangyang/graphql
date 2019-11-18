@@ -10,7 +10,6 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/gofrs/uuid"
 	"github.com/maiguangyang/graphql/events"
-	"github.com/maiguangyang/graphql/resolvers"
 	"github.com/vektah/gqlparser/ast"
 )
 

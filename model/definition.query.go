@@ -17,7 +17,7 @@ func queryDefinition(m *Model) *ast.ObjectDefinition {
 		fields = append(fields, createFederationEntitiesQueryField())
 	}
 
-	for _, obj := range m.Objects() {
+	for _, obj := range m.ObjectEntities() {
 		fields = append(fields, fetchFieldDefinition(obj), listFieldDefinition(obj))
 	}
 	return &ast.ObjectDefinition{
@@ -58,7 +58,7 @@ func fetchFieldDefinition(obj Object) *ast.FieldDefinition {
 }
 
 func listFieldDefinition(obj Object) *ast.FieldDefinition {
-	createObjectSortType(obj)
+	// createObjectSortType(obj)
 	return &ast.FieldDefinition{
 		Kind: kinds.FieldDefinition,
 		Name: nameNode(inflection.Plural(strcase.ToLowerCamel(obj.Name()))),
@@ -75,7 +75,6 @@ func listFieldDefinition(obj Object) *ast.FieldDefinition {
 			// 	DefaultValue: &ast.IntValue{Kind: kinds.IntValue, Value: "30"},
 			// 	Type:         namedType("Int"),
 			// },
-
 			&ast.InputValueDefinition{
 				Kind: kinds.InputValueDefinition,
 				Name: nameNode("current_page"),

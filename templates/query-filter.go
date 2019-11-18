@@ -11,7 +11,7 @@ import (
 	"github.com/vektah/gqlparser/ast"
 )
 
-{{range $object := .Model.Objects}}
+{{range $object := .Model.ObjectEntities}}
 
 type {{$object.Name}}QueryFilter struct {
 	Query *string
@@ -48,7 +48,7 @@ func (qf *{{$object.Name}}QueryFilter) applyQueryWithFields(dialect gorm.Dialect
 	if len(fields) == 0 {
 		return nil
 	}
-
+	
 	fieldsMap := map[string][]*ast.Field{}
 	for _, f := range fields {
 		fieldsMap[f.Name] = append(fieldsMap[f.Name],f)
@@ -56,8 +56,17 @@ func (qf *{{$object.Name}}QueryFilter) applyQueryWithFields(dialect gorm.Dialect
 
 	{{range $col := $object.Columns}}{{if $col.IsSearchable}}
 	if _, ok := fieldsMap["{{$col.Name}}"]; ok {
-		*ors = append(*ors, fmt.Sprintf("%[1]s"+dialect.Quote("{{$col.Name}}")+" LIKE ? OR %[1]s"+dialect.Quote("{{$col.Name}}")+" LIKE ?", dialect.Quote(alias) + "."))
-		*values = append(*values, fmt.Sprintf("%s%%", query), fmt.Sprintf("%%%s%%", query))
+		{{if $col.IsString}}
+			column := dialect.Quote(alias)+"."+dialect.Quote("{{$col.Name}}")
+		{{else}}
+			cast := "TEXT"
+			if dialect.GetName() == "mysql" {
+				cast = "CHAR"
+			}
+ 			column := fmt.Sprintf("CAST(%s"+dialect.Quote("{{$col.Name}}")+" AS %s)", dialect.Quote(alias)+".", cast)
+		{{end}}
+		*ors = append(*ors, fmt.Sprintf("%[1]s LIKE ? OR %[1]s LIKE ?", column))
+		*values = append(*values, query+"%", "% "+query+"%")
 	}
 	{{end}}
 	{{end}}
@@ -67,7 +76,7 @@ func (qf *{{$object.Name}}QueryFilter) applyQueryWithFields(dialect gorm.Dialect
 		_fields := []*ast.Field{}
 		_alias := alias + "_{{$rel.Name}}"
 		*joins = append(*joins,{{$rel.JoinString}})
-
+		
 		for _, f := range fs {
 			for _, s := range f.SelectionSet {
 				if f, ok := s.(*ast.Field); ok {
@@ -82,7 +91,7 @@ func (qf *{{$object.Name}}QueryFilter) applyQueryWithFields(dialect gorm.Dialect
 		}
 	}
 	{{end}}
-
+	
 	return nil
 }
 

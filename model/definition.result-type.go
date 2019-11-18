@@ -19,12 +19,6 @@ func objectResultTypeDefinition(o *Object) *ast.ObjectDefinition {
 					Type: nonNull(namedType(o.Name())),
 				}),
 			},
-
-      // &ast.FieldDefinition{
-      //  Kind: kinds.FieldDefinition,
-      //  Name: nameNode("pages"),
-      //  Type: nonNull(namedType("Any")),
-      // },
 			&ast.FieldDefinition{
 				Kind: kinds.FieldDefinition,
 				Name: nameNode("total"),

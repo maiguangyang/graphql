@@ -1,6 +1,7 @@
 package templates
 
 var Main = `package main
+
 import (
 	"context"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
 	"github.com/99designs/gqlgen/handler"
 	"github.com/maiguangyang/graphql/events"
 	jwtgo "github.com/dgrijalva/jwt-go"
@@ -15,20 +17,24 @@ import (
 	"{{.Config.Package}}/gen"
 	"{{.Config.Package}}/src"
 )
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "graphql-orm"
 	app.Usage = "This tool is for generating "
 	app.Version = "0.0.0"
+
 	app.Commands = []cli.Command{
 		startCmd,
 		migrateCmd,
 	}
+
 	err := app.Run(os.Args)
 	if err != nil {
 		panic(err)
 	}
 }
+
 var startCmd = cli.Command{
 	Name:  "start",
 	Usage: "start api server",
@@ -53,6 +59,7 @@ var startCmd = cli.Command{
 		return nil
 	},
 }
+
 var migrateCmd = cli.Command{
 	Name:  "migrate",
 	Usage: "migrate schema database",
@@ -65,24 +72,27 @@ var migrateCmd = cli.Command{
 		return nil
 	},
 }
+
 func automigrate() error {
 	db := gen.NewDBFromEnvVars()
 	defer db.Close()
 	return db.AutoMigrate().Error
 }
+
 func startServer(enableCors bool, port string) error {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 
 	db := gen.NewDBFromEnvVars()
 	defer db.Close()
-	db.AutoMigrate()
 
 	eventController, err := events.NewEventController()
 	if err != nil {
 		return err
 	}
+
 	mux := gen.GetHTTPServeMux(src.New(db, &eventController), db)
+
 	mux.HandleFunc("/healthcheck", func(res http.ResponseWriter, req *http.Request) {
 		if err := db.Ping(); err != nil {
 			res.WriteHeader(400)
@@ -92,6 +102,7 @@ func startServer(enableCors bool, port string) error {
 		res.WriteHeader(200)
 		res.Write([]byte("OK"))
 	})
+
 	var handler http.Handler
 	if enableCors {
 		handler = cors.AllowAll().Handler(mux)
@@ -100,23 +111,30 @@ func startServer(enableCors bool, port string) error {
 	}
 
 	h := &http.Server{Addr: ":" + port, Handler: handler}
+
 	go func() {
 		log.Printf("connect to http://localhost:%s/graphql for GraphQL playground", port)
 		log.Fatal(h.ListenAndServe())
 	}()
+
 	<-stop
+
 	log.Println("\nShutting down the server...")
+
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	err = db.Close()
-	if err != nil {
-		return cli.NewExitError(err, 1)
-	}
-	log.Println("Database connection closed")
+
 	err = h.Shutdown(ctx)
 	if err != nil {
 		return cli.NewExitError(err, 1)
 	}
 	log.Println("Server gracefully stopped")
+
+	err = db.Close()
+	if err != nil {
+		return cli.NewExitError(err, 1)
+	}
+	log.Println("Database connection closed")
+
 	return nil
 }
 `

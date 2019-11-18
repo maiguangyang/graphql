@@ -6,17 +6,23 @@ import (
 	"fmt"
 	"reflect"
 	"time"
-
+	
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/mitchellh/mapstructure"
-	"github.com/maiguangyang/graphql/resolvers"
 )
 
+type NotFoundError struct {
+	Entity string
+}
 
-{{range $object := .Model.Objects}}
+func (e *NotFoundError) Error() string {
+	return fmt.Sprintf("%s not found", e.Entity)
+}
+
+{{range $object := .Model.ObjectEntities}}
 
 type {{.Name}}ResultType struct {
-	resolvers.EntityResultType
+	EntityResultType
 }
 
 type {{.Name}} struct {
@@ -25,10 +31,15 @@ type {{.Name}} struct {
 
 {{range $rel := $object.Relationships}}
 {{$rel.MethodName}} {{$rel.GoType}} ` + "`" + `{{$rel.ModelTags}}` + "`" + `
+{{if $rel.Preload}}{{$rel.MethodName}}Preloaded bool ` + "`gorm:\"-\"`" + `{{end}}
 {{end}}
 }
 
 func (m *{{.Name}}) Is_Entity() {}
+
+{{range $interface := $object.Interfaces}}
+func (m *{{$object.Name}}) Is{{$interface}}() {}
+{{end}}
 
 type {{.Name}}Changes struct {
 	{{range $col := $object.Columns}}

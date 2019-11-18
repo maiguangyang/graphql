@@ -21,21 +21,53 @@ func (o *ObjectRelationship) Name() string {
 func (o *ObjectRelationship) MethodName() string {
 	return strcase.ToCamel(o.Def.Name.Value)
 }
-func (o *ObjectRelationship) InverseRelationshipName() string {
+func (o *ObjectRelationship) ValueForRelationshipDirectiveAttribute(name string) (val interface{}, ok bool) {
 	for _, d := range o.Def.Directives {
 		if d.Name.Value == "relationship" {
 			for _, arg := range d.Arguments {
-				if arg.Name.Value == "inverse" {
-					v, ok := arg.Value.GetValue().(string)
-					if !ok {
-						panic(fmt.Sprintf("invalid inverse value for %s->%s relationship", o.Obj.Name(), o.Name()))
-					}
-					return v
+				if arg.Name.Value == name {
+					val = arg.Value.GetValue()
+					ok = true
+					return
 				}
 			}
 		}
 	}
-	panic(fmt.Sprintf("missing relationship directive/inverse argument for %s->%s relationship", o.Obj.Name(), o.Name()))
+	return
+}
+func (o *ObjectRelationship) StringForRelationshipDirectiveAttribute(name string) (val string, ok bool) {
+	value, ok := o.ValueForRelationshipDirectiveAttribute(name)
+	if !ok {
+		return
+	}
+	val, ok = value.(string)
+	if !ok {
+		panic(fmt.Sprintf("invalid %s value for %s->%s relationship", name, o.Obj.Name(), o.Name()))
+	}
+	return
+}
+func (o *ObjectRelationship) BoolForRelationshipDirectiveAttribute(name string) (val bool, ok bool) {
+	value, ok := o.ValueForRelationshipDirectiveAttribute(name)
+	if !ok {
+		return
+	}
+	val, ok = value.(bool)
+	if !ok {
+		panic(fmt.Sprintf("invalid %s value for %s->%s relationship", name, o.Obj.Name(), o.Name()))
+	}
+	return
+}
+func (o *ObjectRelationship) InverseRelationshipName() string {
+	val, ok := o.StringForRelationshipDirectiveAttribute("inverse")
+	if !ok {
+		panic(fmt.Sprintf("missing inverse value for %s->%s relationship", o.Obj.Name(), o.Name()))
+	}
+	return val
+}
+
+func (o *ObjectRelationship) Preload() bool {
+	val, _ := o.BoolForRelationshipDirectiveAttribute("preload")
+	return val
 }
 
 func (o *ObjectRelationship) Target() *Object {
@@ -74,6 +106,7 @@ func (o *ObjectRelationship) IsMainRelationshipForManyToMany() bool {
 func (o *ObjectRelationship) IsNonNull() bool {
 	return isNonNullType(o.Def.Type)
 }
+
 func (o *ObjectRelationship) ReturnType() string {
 	nt := getNamedType(o.Def.Type).(*ast.Named)
 	if o.IsToMany() {
@@ -134,11 +167,11 @@ func (o *ObjectRelationship) JoinString() string {
 	join := ""
 	if o.IsManyToMany() {
 		joinTable := o.ManyToManyJoinTable()
-		join += fmt.Sprintf("\"LEFT JOIN \"+dialect.Quote(TableName(\"%[1]s\"))+\" \"+dialect.Quote(_alias+\"_jointable\")+\" ON \"+dialect.Quote(alias)+\".id = \"+dialect.Quote(_alias+\"_jointable\")+\".\"+dialect.Quote(\"%[3]s_id\")+\" LEFT JOIN \"+dialect.Quote(\"%[2]s\")+\" \"+dialect.Quote(_alias)+\" ON \"+dialect.Quote(_alias+\"_jointable\")+\".\"+dialect.Quote(\"%[4]s_id\")+\" = \"+dialect.Quote(_alias)+\".id\"", joinTable, o.Target().TableName(), inflection.Singular(o.InverseRelationshipName()), inflection.Singular(o.Name()))
+		join += fmt.Sprintf("\"LEFT JOIN \"+dialect.Quote(TableName(\"%[1]s\"))+\" \"+dialect.Quote(_alias+\"_jointable\")+\" ON \"+dialect.Quote(alias)+\".id = \"+dialect.Quote(_alias+\"_jointable\")+\".\"+dialect.Quote(\"%[3]s_id\")+\" LEFT JOIN \"+dialect.Quote(TableName(\"%[2]s\"))+\" \"+dialect.Quote(_alias)+\" ON \"+dialect.Quote(_alias+\"_jointable\")+\".\"+dialect.Quote(\"%[4]s_id\")+\" = \"+dialect.Quote(_alias)+\".id\"", joinTable, o.Target().TableName(), inflection.Singular(o.InverseRelationshipName()), inflection.Singular(o.Name()))
 	} else if o.IsToOne() {
-		join += fmt.Sprintf("\"LEFT JOIN \"+dialect.Quote(TableName(\"%[1]s\"))+\" \"+dialect.Quote(_alias)+\" ON \"+dialect.Quote(_alias)+\".id = \"+alias+\".\"+dialect.Quote(\"%[2]s_id\")", o.Target().TableName(), o.Name())
+		join += fmt.Sprintf("\"LEFT JOIN \"+dialect.Quote(TableName(\"%[1]s\"))+\" \"+dialect.Quote(_alias)+\" ON \"+dialect.Quote(_alias)+\".id = \"+alias+\".\"+dialect.Quote(\"%[2]sId\")", o.Target().TableName(), o.Name())
 	} else if o.IsToMany() {
-		join += fmt.Sprintf("\"LEFT JOIN \"+dialect.Quote(TableName(\"%[1]s\"))+\" \"+dialect.Quote(_alias)+\" ON \"+dialect.Quote(_alias)+\".\"+dialect.Quote(\"%[3]s_id\")+\" = \"+dialect.Quote(alias)+\".id\"", o.Target().TableName(), o.Name(), o.InverseRelationshipName())
+		join += fmt.Sprintf("\"LEFT JOIN \"+dialect.Quote(TableName(\"%[1]s\"))+\" \"+dialect.Quote(_alias)+\" ON \"+dialect.Quote(_alias)+\".\"+dialect.Quote(\"%[3]sId\")+\" = \"+dialect.Quote(alias)+\".id\"", o.Target().TableName(), o.Name(), o.InverseRelationshipName())
 	}
 	return join
 }

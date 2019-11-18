@@ -10,7 +10,6 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/gofrs/uuid"
 	"github.com/maiguangyang/graphql/events"
-	"github.com/maiguangyang/graphql/resolvers"
 	"github.com/vektah/gqlparser/ast"
 )
 
@@ -41,7 +40,7 @@ func (r *GeneratedQueryResolver) _entities(ctx context.Context, representations 
 			break
 		}
 
-		switch typename { {{range $obj := .Model.Objects}}{{if $obj.IsFederatedType}}
+		switch typename { {{range $obj := .Model.ObjectEntities}}{{if $obj.IsFederatedType}}
 		case "{{$obj.Name}}":
 			ec := getExecutionContext(ctx)
 			f, _err := ec.unmarshalInput{{$obj.Name}}FilterType(ctx, anyValue)
@@ -49,12 +48,22 @@ func (r *GeneratedQueryResolver) _entities(ctx context.Context, representations 
 			if err != nil {
 				return
 			}
-			item, qerr := r.{{$obj.Name}}(ctx, nil, nil, &f)
-			err = qerr
-			if err != nil {
-				return
+
+			if f.IsEmpty(ctx, r.DB.Query().Dialect()) {
+				res = append(res, nil)
+				continue
 			}
-			res = append(res, item)
+
+			item, qerr := r.{{$obj.Name}}(ctx, nil, nil, &f)
+			if qerr != nil {
+				if _, isNotFound := qerr.(*NotFoundError); !isNotFound {
+					err = qerr
+					return
+				}
+				res = append(res, nil)
+			} else {
+				res = append(res, item)
+			}
 			break;{{end}}{{end}}
 		default:
 			err = fmt.Errorf("The _entities resolver tried to load an entity for type \"%s\", but no object type of that name was found in the schema", typename)

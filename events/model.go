@@ -1,6 +1,8 @@
 package events
 
 import (
+	"encoding/json"
+
 	uuid "github.com/gofrs/uuid"
 )
 
@@ -20,9 +22,30 @@ type EventDataValue interface{}
 
 // EventChange ...
 type EventChange struct {
-	Name     string          `json:"name"`
-	OldValue *EventDataValue `json:"oldValue"`
-	NewValue *EventDataValue `json:"newValue"`
+	Name     string `json:"name"`
+	OldValue string `json:"oldValue"`
+	NewValue string `json:"newValue"`
+}
+
+func (ec *EventChange) SetOldValue(value interface{}) error {
+	data, err := json.Marshal(value)
+	if err == nil {
+		ec.OldValue = string(data)
+	}
+	return err
+}
+func (ec *EventChange) OldValueAs(data interface{}) error {
+	return json.Unmarshal([]byte(ec.OldValue), data)
+}
+func (ec *EventChange) SetNewValue(value interface{}) error {
+	data, err := json.Marshal(value)
+	if err == nil {
+		ec.NewValue = string(data)
+	}
+	return err
+}
+func (ec *EventChange) NewValueAs(data interface{}) error {
+	return json.Unmarshal([]byte(ec.NewValue), data)
 }
 
 type EventMetadata struct {
@@ -37,10 +60,8 @@ type EventMetadata struct {
 // Event ...
 type Event struct {
 	EventMetadata
-	ID        string                     `json:"id"`
-	Changes   []*EventChange             `json:"changes"`
-	OldValues map[string]*EventDataValue `json:"oldValues"`
-	NewValues map[string]*EventDataValue `json:"newValues"`
+	ID      string         `json:"id"`
+	Changes []*EventChange `json:"changes"`
 }
 
 // NewEvent ...
@@ -49,8 +70,6 @@ func NewEvent(meta EventMetadata) Event {
 		EventMetadata: meta,
 		ID:            uuid.Must(uuid.NewV4()).String(),
 		Changes:       []*EventChange{},
-		OldValues:     map[string]*EventDataValue{},
-		NewValues:     map[string]*EventDataValue{},
 	}
 }
 
@@ -62,18 +81,6 @@ func (e Event) HasChangedColumn(c string) bool {
 		}
 	}
 	return false
-}
-
-// OldValue returns old value for column
-func (e Event) OldValue(c string) (*EventDataValue, bool) {
-	v, ok := e.OldValues[c]
-	return v, ok
-}
-
-// NewValue returns new value for column
-func (e Event) NewValue(c string) (*EventDataValue, bool) {
-	v, ok := e.NewValues[c]
-	return v, ok
 }
 
 // ChangedColumns returns list of names of changed columns
@@ -98,27 +105,27 @@ func (e *Event) Change(column string) (ec *EventChange) {
 }
 
 // AddNewValue ...
-func (e *Event) AddNewValue(column string, value interface{}) {
-	v := EventDataValue(value)
-	e.NewValues[column] = &v
+func (e *Event) AddNewValue(column string, v EventDataValue) {
 	change := e.Change(column)
 	if change == nil {
 		c := EventChange{Name: column}
 		change = &c
 		e.Changes = append(e.Changes, change)
 	}
-	change.NewValue = &v
+	if err := change.SetNewValue(v); err != nil {
+		panic("failed to set new value" + err.Error())
+	}
 }
 
 // AddOldValue ...
-func (e *Event) AddOldValue(column string, value interface{}) {
-	v := EventDataValue(value)
-	e.NewValues[column] = &v
+func (e *Event) AddOldValue(column string, v EventDataValue) {
 	change := e.Change(column)
 	if change == nil {
 		c := EventChange{Name: column}
 		change = &c
 		e.Changes = append(e.Changes, change)
 	}
-	change.OldValue = &v
+	if err := change.SetOldValue(v); err != nil {
+		panic("failed to set new value" + err.Error())
+	}
 }

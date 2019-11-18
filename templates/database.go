@@ -1,21 +1,24 @@
 package templates
 
 var Database = `package gen
+
 import (
 	"fmt"
-	"os"
 	"net/url"
 	"strings"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mssql"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
+
 // DB ...
 type DB struct {
 	db *gorm.DB
 }
+
 // NewDBFromEnvVars Create database client using DATABASE_URL environment variable
 func NewDBFromEnvVars() *DB {
 	urlString := os.Getenv("DATABASE_URL")
@@ -45,23 +48,35 @@ func NewDB(db *gorm.DB) *DB {
 	InitGorm(db)
 	return &v
 }
-// NewDBWithString ...
+
+// NewDBWithString creates database instance with database URL string
 func NewDBWithString(urlString string) *DB {
 	u, err := url.Parse(urlString)
 	if err != nil {
 		panic(err)
 	}
+
 	urlString = getConnectionString(u)
+
 	db, err := gorm.Open(u.Scheme, urlString)
 	if err != nil {
 		panic(err)
 	}
-	// db.DB().SetMaxIdleConns({{.Config.MaxIdleConnections}})
-	// db.DB().SetConnMaxLifetime(time.Second*{{.Config.ConnMaxLifetime}})
-	// db.DB().SetMaxOpenConns({{.Config.MaxOpenConnections}})
-	db.LogMode(true)
+
+	// if urlString == "sqlite3://:memory:" {
+	// 	db.DB().SetMaxIdleConns(1)
+	// 	db.DB().SetConnMaxLifetime(time.Second * 300)
+	// 	db.DB().SetMaxOpenConns(1)
+	// } else {
+	// 	db.DB().SetMaxIdleConns({{.Config.MaxIdleConnections}})
+	// 	db.DB().SetConnMaxLifetime(time.Second*{{.Config.ConnMaxLifetime}})
+	// 	db.DB().SetMaxOpenConns({{.Config.MaxOpenConnections}})
+	// }
+	db.LogMode(os.Getenv("DEBUG") == "true")
+
 	return NewDB(db)
 }
+
 func getConnectionString(u *url.URL) string {
 	if u.Scheme == "postgres" {
 		password, _ := u.User.Password()
@@ -78,20 +93,24 @@ func getConnectionString(u *url.URL) string {
 	}
 	return strings.Replace(u.String(), u.Scheme+"://", "", 1)
 }
+
 // Query ...
 func (db *DB) Query() *gorm.DB {
 	return db.db
 }
+
 // AutoMigrate ...
 func (db *DB) AutoMigrate() *gorm.DB {
 	return db.db.AutoMigrate({{range $obj := .Model.Objects}}
 		{{.Name}}{},{{end}}
 	)
 }
+
 // Close ...
 func (db *DB) Close() error {
 	return db.db.Close()
 }
+
 func (db *DB) Ping() error {
 	return db.db.DB().Ping()
 }

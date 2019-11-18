@@ -3,7 +3,6 @@ package templates
 var ResolverMutations = `package gen
 
 import (
-  "fmt"
 	"context"
 	"time"
 
@@ -11,19 +10,17 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/gofrs/uuid"
 	"github.com/maiguangyang/graphql/events"
-	"github.com/maiguangyang/graphql/resolvers"
 	"github.com/vektah/gqlparser/ast"
-	"github.com/maiguangyang/graphql-gorm/utils"
 )
 
 type GeneratedMutationResolver struct{ *GeneratedResolver }
 
-{{range $obj := .Model.Objects}}
+{{range $obj := .Model.ObjectEntities}}
 	func (r *GeneratedMutationResolver) Create{{$obj.Name}}(ctx context.Context, input map[string]interface{}) (item *{{$obj.Name}}, err error) {
 		return r.Handlers.Create{{$obj.Name}}(ctx, r.GeneratedResolver, input)
 	}
 	func Create{{$obj.Name}}Handler(ctx context.Context, r *GeneratedResolver, input map[string]interface{}) (item *{{$obj.Name}}, err error) {
-		principalID := getPrincipalIDFromContext(ctx)
+		principalID := GetPrincipalIDFromContext(ctx)
 		now := time.Now()
 		item = &{{$obj.Name}}{ID: uuid.Must(uuid.NewV4()).String(), CreatedBy: principalID}
 		tx := r.DB.db.Begin()
@@ -63,6 +60,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		{{range $col := .Columns}}{{if $col.IsCreatable}}
 			if _, ok := input["{{$col.Name}}"]; ok && (item.{{$col.MethodName}} != changes.{{$col.MethodName}}){{if $col.IsOptional}} && (item.{{$col.MethodName}} == nil || changes.{{$col.MethodName}} == nil || *item.{{$col.MethodName}} != *changes.{{$col.MethodName}}){{end}} {
 				item.{{$col.MethodName}} = changes.{{$col.MethodName}}
+				{{if $col.IsIdentifier}}event.EntityID = item.{{$col.MethodName}}{{end}}
 				event.AddNewValue("{{$col.Name}}", changes.{{$col.MethodName}})
 			}
 		{{end}}{{end}}
@@ -102,14 +100,12 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 
 		{{range $rel := $obj.Relationships}}
 			{{if $rel.IsToMany}}{{if not $rel.Target.IsExtended}}
-        {{$rel.Name}} := []{{$rel.TargetType}}{}
-				if ids,ok:=input["{{$rel.Name}}Ids"].([]interface{}); ok {
+				{{$rel.Name}} := []{{$rel.TargetType}}{}
+				if ids,exists:=input["{{$rel.Name}}Ids"]; exists {
 					tx.Find(&{{$rel.Name}}, "id IN (?)", ids)
-
 					association := tx.Model(&item).Association("{{$rel.MethodName}}")
 					association.Replace({{$rel.Name}})
 				}
-
 				{{if $rel.IsOneToMany}}
         if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}_id = ?", item.ID).Update("state", item.State).Error; err != nil {
           tx.Rollback()
@@ -126,6 +122,10 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		}
 
 		if len(event.Changes) > 0 {
+			err = r.Handlers.OnEvent(ctx, r, &event)
+			if err != nil {
+				return
+			}
 			err = r.EventController.SendEvent(ctx, &event)
 		}
 
@@ -135,7 +135,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		return r.Handlers.Update{{$obj.Name}}(ctx, r.GeneratedResolver, id, input)
 	}
 	func Update{{$obj.Name}}Handler(ctx context.Context, r *GeneratedResolver, id string, input map[string]interface{}) (item *{{$obj.Name}}, err error) {
-		principalID := getPrincipalIDFromContext(ctx)
+		principalID := GetPrincipalIDFromContext(ctx)
 		item = &{{$obj.Name}}{}
 		now := time.Now()
 		tx := r.DB.db.Begin()
@@ -214,9 +214,9 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 
 		{{range $rel := $obj.Relationships}}
 		{{if $rel.IsToMany}}{{if not $rel.Target.IsExtended}}
-      {{$rel.Name}} := []{{$rel.TargetType}}{}
+			{{$rel.Name}} := []{{$rel.TargetType}}{}
 
-			if ids,ok := input["{{$rel.Name}}Ids"].([]interface{}); ok {
+			if ids,exists:=input["{{$rel.Name}}Ids"]; exists {
 				tx.Find(&{{$rel.Name}}, "id IN (?)", ids)
 
 				association := tx.Model(&item).Association("{{$rel.MethodName}}")
@@ -229,22 +229,25 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
         return item, err
       }
       {{end}}
-
 		{{end}}{{end}}
 		{{end}}
 
-    if err := resolvers.GetItem(ctx, tx, item, &id); err != nil {
+    if err := GetItem(ctx, tx, item, &id); err != nil {
       tx.Rollback()
       return item, err
     }
 
-    err = tx.Commit().Error
-    if err != nil {
-      tx.Rollback()
-      return
-    }
+		err = tx.Commit().Error
+		if err != nil {
+			tx.Rollback()
+			return
+		}
 
 		if len(event.Changes) > 0 {
+			err = r.Handlers.OnEvent(ctx, r, &event)
+			if err != nil {
+				return
+			}
 			err = r.EventController.SendEvent(ctx, &event)
 			// data, _ := json.Marshal(event)
 			// fmt.Println("?",string(data))
@@ -256,7 +259,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		return r.Handlers.Delete{{$obj.Name}}(ctx, r.GeneratedResolver, id)
 	}
 	func Delete{{$obj.Name}}Handler(ctx context.Context, r *GeneratedResolver, id string) (item *{{$obj.Name}}, err error) {
-		principalID := getPrincipalIDFromContext(ctx)
+		principalID := GetPrincipalIDFromContext(ctx)
 		item = &{{$obj.Name}}{}
 		now := time.Now()
 		tx := r.DB.db.Begin()
@@ -266,8 +269,9 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
       }
     }()
 
-		if err := resolvers.GetItem(ctx, tx, item, &id); err != nil {
-			return item, err
+		err = GetItem(ctx, tx, item, &id)
+		if err != nil {
+			return
 		}
 
 	  // 2为删除
@@ -285,6 +289,10 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		})
 
 		err = tx.Delete(item, TableName("{{$obj.TableName}}") + ".id = ?", id).Error
+		if err != nil {
+			tx.Rollback()
+			return
+		}
 
 	  if err := tx.Save(item).Error; err != nil {
 	  	tx.Rollback()
@@ -307,6 +315,10 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 			return
 		}
 
+		err = r.Handlers.OnEvent(ctx, r, &event)
+		if err != nil {
+			return
+		}
 		err = r.EventController.SendEvent(ctx, &event)
 
 		return

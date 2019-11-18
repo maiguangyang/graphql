@@ -4,10 +4,8 @@ var ResolverSrc = `package src
 
 import (
 	"context"
-	"github.com/maiguangyang/graphql/events"
 	"{{.Config.Package}}/gen"
-	"{{.Config.Package}}/utils"
-	"{{.Config.Package}}/middleware"
+	"github.com/maiguangyang/graphql/events"
 )
 
 

@@ -9,20 +9,16 @@ import (
 func createObjectDefinition(obj Object) *ast.InputObjectDefinition {
 	fields := []*ast.InputValueDefinition{}
 	for _, col := range obj.Columns() {
-
 		if !col.IsCreatable() {
 			continue
 		}
-
 		t := col.Def.Type
 		if col.Name() == "id" {
 			t = getNamedType(t)
 		}
-
 		if isListType(getNullableType(t)) {
 			t = getNullableType(t)
 		}
-
 		fields = append(fields, &ast.InputValueDefinition{
 			Kind:        kinds.InputValueDefinition,
 			Name:        col.Def.Name,
@@ -30,7 +26,6 @@ func createObjectDefinition(obj Object) *ast.InputObjectDefinition {
 			Type:        t,
 		})
 	}
-
 	return &ast.InputObjectDefinition{
 		Kind:   kinds.InputObjectDefinition,
 		Name:   nameNode(obj.Name() + "CreateInput"),
@@ -51,7 +46,6 @@ func updateObjectDefinition(obj Object) *ast.InputObjectDefinition {
 			Type:        getNullableType(col.Def.Type),
 		})
 	}
-
 	return &ast.InputObjectDefinition{
 		Kind:   kinds.InputObjectDefinition,
 		Name:   nameNode(obj.Name() + "UpdateInput"),
