@@ -56,7 +56,7 @@ var Graphql = `{{range $obj := .Model.Objects}}
 var GraphqlApi = `[
   {{range $obj := .Model.Objects}}
     {
-      "title": "{{.Name}}",
+      "title": "{{.Model.ObjectsEntity}}",
       "type": "{{$obj.PluralName}}",
     },
   {{end}}
