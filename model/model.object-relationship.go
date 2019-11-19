@@ -18,6 +18,9 @@ type ObjectRelationship struct {
 func (o *ObjectRelationship) Name() string {
 	return o.Def.Name.Value
 }
+func (o *ObjectRelationship) LowerName() string {
+	return strcase.ToLowerCamel(o.Target().Name())
+}
 func (o *ObjectRelationship) MethodName() string {
 	return strcase.ToCamel(o.Def.Name.Value)
 }

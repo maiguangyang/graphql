@@ -60,8 +60,16 @@ var GraphqlApi = `[
       "name": "{{$obj.LowerName}}",
       "fields": [
         {{range $col := $obj.Columns}}{ "name": "{{$col.Name}}", "desc": "{{$col.GetComment}}", "type": "{{$col.GetType}}", "required": "{{$col.IsRequired}}", "validator": "{{$col.GetValidator}}", "remark": "{{$col.GetRemark}}" },
-        {{end}}
+        {{end}}{{range $rel := $obj.Relationships}}{{if $rel.IsToMany}}
+        { "name": "{{$rel.Name}}", "desc": "{{$rel.Target.Name}}连表查询", "type": "relationship", "required": "", "validator": "", "remark": "{{$rel.LowerName}}" },{{end}}{{end}}
       ],
+      "data": [
+        { "title": "列表", "api": "{{$obj.LowerName}}s" },
+        { "title": "详情", "api": "{{$obj.LowerName}}" },
+        { "title": "新增", "api": "create{{$obj.Name}}" },
+        { "title": "修改", "api": "update{{$obj.Name}}" },
+        { "title": "删除", "api": "delete{{$obj.Name}}" }
+      ]
     },
   {{end}}
 ]
