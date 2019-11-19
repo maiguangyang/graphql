@@ -16,7 +16,7 @@ type Object struct {
 	Extension *ObjectExtension
 }
 
-// maiguangyang add 自定义表名
+// maiguangyang add 表名
 func (o *Object) EntityName() string {
 	if len(o.Def.Directives[0].Arguments) > 0 {
 		title := o.Def.Directives[0].Arguments[0].Value.GetValue()

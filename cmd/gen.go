@@ -75,6 +75,7 @@ func generate(filePattern, p string) error {
   }
 
   // 接口文档
+  // entity := model.PrintSchemaEntity(m)
   err = generateInterfaceDocument(p, &m, &c)
   if err != nil {
     return err

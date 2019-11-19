@@ -44,7 +44,7 @@ func WriteTemplateRaw(t, filename string, data interface{}) error {
 	return nil
 }
 
-// 生成前端接口接口
+// 生成前端接口文档
 func WriteInterfaceTemplate(t, filename string, data TemplateData) error {
 	return WriteInterfaceTemplateRaw(t, filename, data)
 }

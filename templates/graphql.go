@@ -1,7 +1,7 @@
 package templates
 
 var Graphql = `{{range $obj := .Model.Objects}}
-  # {{.Name}}接口字段
+  # {{.Name}} 接口字段
   fragment {{$obj.PluralName}}Fields on {{.Name}} { {{range $col := $obj.Columns}}
     {{$col.Name}}{{end}}{{range $rel := $obj.Relationships}}{{if $rel.IsToMany}}
     {{$rel.Name}} {
@@ -50,7 +50,12 @@ var Graphql = `{{range $obj := .Model.Objects}}
     }
   }
 
-{{end}}
+{{range $ext := .Model.ObjectExtensions}}{{$obj := $ext.Object}}
+  {{range $col := $obj.Fields}}
+  # {{$col.LowerName}} 接口
+  {{$obj.LowerName}} {{$col.LowerName}} ({{$col.Arguments}}) {
+    {{$col.Name}}({{$col.Inputs}})
+  } {{end}}{{end}}{{end}}
 `
 
 var GraphqlApi = `[
@@ -71,6 +76,19 @@ var GraphqlApi = `[
         { "title": "删除", "api": "delete{{$obj.Name}}" }
       ]
     },
+
+  {{range $ext := .Model.ObjectExtensions}}{{$obj := $ext.Object}}
+    {{range $col := $obj.Fields}}
+    {
+      "title": "{{$col.Name}}",
+      "name": "{{$col.Name}}",
+      "fields": [
+        {{range $filed := $col.FieldName}}
+        { "name": "", "desc": "", "type": "", "required": "", "validator": "", "remark": "" },
+        {{end}}
+      ]
+    }
+    {{end}}{{end}}
   {{end}}
 ]
 `

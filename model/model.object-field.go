@@ -2,7 +2,7 @@ package model
 
 import (
 	"fmt"
-
+	"unicode"
 	"github.com/99designs/gqlgen/codegen/templates"
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/iancoleman/strcase"
@@ -30,7 +30,12 @@ func (o *ObjectField) MethodName() string {
 	name := o.Name()
 	return templates.ToGo(name)
 }
-
+func (o *ObjectField) LowerName() string {
+  for i, v := range o.Name() {
+    return string(unicode.ToUpper(v)) + o.Name()[i+1:]
+  }
+  return strcase.ToLowerCamel(o.Name())
+}
 func (o *ObjectField) TargetType() string {
 	nt := getNamedType(o.Def.Type).(*ast.Named)
 	return nt.Name.Value
@@ -266,6 +271,76 @@ func (o *ObjectField) GetValidator() string {
     }
 	}
 	return str
+}
+
+// 获取Arguments
+func (o *ObjectField) Arguments() string {
+	argString := ""
+
+	for key, child := range o.Obj.Def.Fields[0].Arguments {
+		nullType  := ""
+		bool := isNonNullType(child.Type)
+		if bool {
+			nullType = "!"
+		}
+		v, ok := getNamedType(child.Type).(*ast.Named)
+		if ok {
+			if key != len(o.Obj.Def.Fields[0].Arguments) - 1 {
+				argString = argString + child.Name.Value + ": " + v.Name.Value + nullType + ", "
+			} else {
+				argString = argString + child.Name.Value + ": " + v.Name.Value + nullType
+			}
+		}
+	}
+
+	return argString
+}
+
+// 获取Input
+func (o *ObjectField) Inputs() string {
+	argString := ""
+
+	for key, child := range o.Obj.Def.Fields[0].Arguments {
+		if key != len(o.Obj.Def.Fields[0].Arguments) - 1 {
+			argString = argString + child.Name.Value + ": $" + child.Name.Value + ", "
+		} else {
+			argString = argString + child.Name.Value + ": $" + child.Name.Value
+		}
+	}
+
+	return argString
+}
+
+// 获取Input
+func (o *ObjectField) FieldName() []Object {
+	objs := []Object{}
+
+	for _, def := range o.Obj.Def.Fields {
+		// def, ok := def.(*ast.FieldDefinition)
+		// if ok {
+		// fmt.Println(child.Name.Value)
+			// fmt.Println(def)
+			// for _, child := range def.Fields {
+			// 	fmt.Println(child.Name)
+			// }
+			// if len(def.Directives[0].Arguments) > 0 {
+			// 	fmt.Println(def.Directives[0].Arguments[0].Value.GetValue())
+			// }
+			objs = append(objs, Object{Def: def, Model: m})
+		// }
+	}
+	fmt.Println(objs)
+	return objs
+}
+
+
+// 表名
+func (o *ObjectField) EntityName() string {
+	// if len(o.Obj.Def.Directives[0].Arguments) > 0 {
+	// 	title := o.Obj.Def.Directives[0].Arguments[0].Value.GetValue()
+	// 	return title.(string)
+	// }
+	return o.Name()
 }
 
 // 查找数组并返回下标

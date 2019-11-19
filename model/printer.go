@@ -35,3 +35,21 @@ func PrintSchema(model Model) (string, error) {
 
 	return printedString, nil
 }
+
+// PrintSchemaEntity
+func PrintSchemaEntity(model Model) Model {
+
+	for _, o := range model.Objects() {
+		fields := []*ast.FieldDefinition{}
+		for _, f := range o.Def.Fields {
+			f.Directives = filterDirective(f.Directives, "relationship")
+			f.Directives = filterDirective(f.Directives, "column")
+			f.Directives = filterDirective(f.Directives, "validator")
+			fields = append(fields, f)
+		}
+		o.Def.Fields = fields
+		o.Def.Directives = filterDirective(o.Def.Directives, "entity")
+	}
+
+	return model
+}

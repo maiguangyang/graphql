@@ -17,6 +17,9 @@ func (m *Model) Objects() []Object {
 	for _, def := range m.Doc.Definitions {
 		def, ok := def.(*ast.ObjectDefinition)
 		if ok {
+			// for _, child := range def.Fields {
+			// 	fmt.Println(child.Name)
+			// }
 			// if len(def.Directives[0].Arguments) > 0 {
 			// 	fmt.Println(def.Directives[0].Arguments[0].Value.GetValue())
 			// }
@@ -45,6 +48,12 @@ func (m *Model) ObjectExtensions() []ObjectExtension {
 		def, ok := def.(*ast.TypeExtensionDefinition)
 		if ok {
 			obj := &Object{Def: def.Definition, Model: m}
+			obj.Def.Directives = filterDirective(obj.Def.Directives, "entity")
+			// fmt.Println(def.Directives[0].Arguments[0].Value.GetValue())
+			// fmt.Println(def.Definition.Fields[0].Name)
+			// fmt.Println(obj.Def.Fields[0].Name.Value)
+			// for _, child := range obj.Def.Fields[0].Arguments {
+			// }
 			objs = append(objs, ObjectExtension{Def: def, Model: m, Object: obj})
 		}
 	}
