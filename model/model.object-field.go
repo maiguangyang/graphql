@@ -163,24 +163,27 @@ func (o *ObjectField) GoTypeWithPointer(showPointer bool) string {
 }
 
 // maiguangyang new add
-func (o *ObjectField) GetArgValue(name string) string {
+func (o *ObjectField) GetArgValue(name string) map[string]map[string]string {
 	for _, d := range o.Def.Directives {
-		if d.Name.Value == name {
-			if len(d.Arguments) > 0 {
-				column := d.Arguments[0].Value.GetValue()
-				return column.(string)
+		if d.Name.Value == name && len(d.Arguments) > 0 {
+			argArr := map[string]map[string]string{
+				name: map[string]string{},
 			}
+			for _, child := range d.Arguments {
+				argArr[name][child.Name.Value] = child.Value.GetValue().(string)
+			}
+			return argArr
 		}
 	}
 
-	return ""
+	return map[string]map[string]string{}
 }
 
 // 获取字段说明
 func (o *ObjectField) GetComment() string {
-	value   := o.GetArgValue("column")
-	str := ""
-
+	column := o.GetArgValue("column")
+	value  := column["column"]["gorm"]
+	str    := ""
 	if value != "" {
 		str = RegexpReplace(value, `comment '`, `';`)
 	} else {
@@ -218,11 +221,11 @@ func (o *ObjectField) GetRemark() string {
 
 // 获取字段说明
 func (o *ObjectField) GetType() string {
-	value   := o.GetArgValue("column")
-	str := ""
+	column := o.GetArgValue("column")
+	value  := column["column"]["gorm"]
+	str    := ""
 
 	if value != "" {
-		fmt.Println(value)
 		str = RegexpReplace(value, `type:`, ` `)
 	} else {
     switch o.Name() {
@@ -242,6 +245,24 @@ func (o *ObjectField) GetType() string {
         str = "int(2)"
       case "del":
         str = "int(2)"
+    }
+	}
+	return str
+}
+
+// 获取正则验证
+func (o *ObjectField) GetValidator() string {
+	column := o.GetArgValue("validator")
+	value  := column["validator"]["type"]
+	str    := ""
+	if value != "" {
+		str = value
+	} else {
+    switch o.Name() {
+      case "state":
+        str = "justInt"
+      case "del":
+        str = "justInt"
     }
 	}
 	return str

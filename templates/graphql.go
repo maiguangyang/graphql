@@ -59,8 +59,7 @@ var GraphqlApi = `[
       "title": "{{$obj.EntityName}}",
       "name": "{{$obj.LowerName}}",
       "fields": [
-        {{range $col := $obj.Columns}}
-        { "name": "{{$col.Name}}", "desc": "{{$col.GetComment}}", "type": "{{$col.GetType}}", "required": "{{$col.IsRequired}}", "validator": "password", "remark": "{{$col.GetRemark}}" },
+        {{range $col := $obj.Columns}}{ "name": "{{$col.Name}}", "desc": "{{$col.GetComment}}", "type": "{{$col.GetType}}", "required": "{{$col.IsRequired}}", "validator": "{{$col.GetValidator}}", "remark": "{{$col.GetRemark}}" },
         {{end}}
       ],
     },
