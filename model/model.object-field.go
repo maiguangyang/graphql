@@ -312,25 +312,26 @@ func (o *ObjectField) Inputs() string {
 }
 
 // 获取Input
-func (o *ObjectField) FieldName() []Object {
-	objs := []Object{}
+func (o *ObjectField) Fields() string {
+	argString := ""
+	// { "name": "", "desc": "", "type": "", "required": "", "validator": "", "remark": "" },
 
-	for _, def := range o.Obj.Def.Fields {
-		// def, ok := def.(*ast.FieldDefinition)
-		// if ok {
-		// fmt.Println(child.Name.Value)
-			// fmt.Println(def)
-			// for _, child := range def.Fields {
-			// 	fmt.Println(child.Name)
-			// }
-			// if len(def.Directives[0].Arguments) > 0 {
-			// 	fmt.Println(def.Directives[0].Arguments[0].Value.GetValue())
-			// }
-			objs = append(objs, Object{Def: def, Model: m})
-		// }
+	for key, child := range o.Obj.Def.Fields[0].Arguments {
+		nullType  := "false"
+		bool := isNonNullType(child.Type)
+		if bool {
+			nullType = "true"
+		}
+		v, ok := getNamedType(child.Type).(*ast.Named)
+		if ok {
+			if key != len(o.Obj.Def.Fields[0].Arguments) - 1 {
+				argString = argString + `{ "name": "` + child.Name.Value + `", "desc": "` + child.Name.Value + `", "type": "` + v.Name.Value + `", "required": "` + nullType + `", "validator": "", "remark": "" },` + "\n      "
+			} else {
+				argString = argString + `{ "name": "` + child.Name.Value + `", "desc": "` + child.Name.Value + `", "type": "` + v.Name.Value + `", "required": "` + nullType + `", "validator": "", "remark": "" }` + "\n"
+			}
+		}
 	}
-	fmt.Println(objs)
-	return objs
+	return argString
 }
 
 
