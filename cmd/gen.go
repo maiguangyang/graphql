@@ -144,7 +144,7 @@ func ensureDir(dir string) {
 // 生成前端接口接口
 func generateInterface(p string, m *model.Model, c *model.Config) error {
   data := templates.TemplateData{Model: m, Config: c}
-  return templates.WriteInterfaceTemplate(templates.Graphql, path.Join(p, "graphql/graphql.gql"), data)
+  return templates.WriteInterfaceTemplate(templates.Graphql, path.Join(p, "graphql/admin.gql"), data)
 }
 
 // 生成前端接口接口文档

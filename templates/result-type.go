@@ -90,13 +90,13 @@ func recurseSelectionSets(reqCtx *graphql.RequestContext, fields []string, selec
       if len(sel.ObjectDefinition.Fields) > 0 {
   			for _, child := range sel.ObjectDefinition.Fields {
           // fmt.Println("child:", child.Name, child.Type.Elem == nil, child.Type.Elem, child.Type.Name(), child.Type.String())
-          if child.Type.Elem == nil &&  child.Name != "assignee" {
+          if child.Type.Elem == nil &&  child.Name != "assignee" && strings.Index(sel.Name, "Ids") == -1 {
             fields = append(fields, alias + "." + snakeString(child.Name))
           }
   			}
       }
 			// ignore private field names !strings.HasPrefix(sel.Name, "__") &&
-			if !strings.HasPrefix(sel.Name, "__") && len(sel.SelectionSet) == 0 {
+			if !strings.HasPrefix(sel.Name, "__") && len(sel.SelectionSet) == 0 && strings.Index(sel.Name, "Ids") == -1 {
 				fields = append(fields, alias + "." + snakeString(sel.Name))
 			}
       // else if (len(sel.SelectionSet) > 0) {
