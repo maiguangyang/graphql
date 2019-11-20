@@ -1,16 +1,17 @@
 package templates
 
 var Graphql = `{{range $obj := .Model.Objects}}
-  # {{.Name}} 接口字段
-  fragment {{$obj.PluralName}}Fields on {{.Name}} {
+  # {{$obj.EntityName}} {{$obj.Name}} 接口字段
+  fragment {{$obj.PluralName}}Fields on {{$obj.Name}} {
     {{range $col := $obj.Columns}}{{$col.Name}}
     {{end}}{{range $rel := $obj.Relationships}}{{if $rel.IsToMany}}{{$rel.Name}} {
       ...{{$rel.Target.Name}}sFields
     }
     {{end}}{{end}}
   }
+
   # 列表
-  query {{.Name}}s ($currentPage: Int = 1, $perPage: Int = 20, $sort: [{{.Name}}SortType!], $search: String, $filter: {{.Name}}FilterType) {
+  query {{$obj.Name}}s ($currentPage: Int = 1, $perPage: Int = 20, $sort: [{{$obj.Name}}SortType!], $search: String, $filter: {{$obj.Name}}FilterType) {
     {{$obj.LowerName}}s(current_page: $currentPage, per_page: $perPage, sort: $sort, q: $search, filter: $filter) {
       data {
         {{range $col := $obj.Columns}}{{$col.Name}}
@@ -25,29 +26,31 @@ var Graphql = `{{range $obj := .Model.Objects}}
       total_page
     }
   }
+
   # 详情
-  query {{.Name}}Detail ($id: ID, $search: String, $filter: {{.Name}}FilterType) {
+  query {{$obj.Name}}Detail ($id: ID, $search: String, $filter: {{$obj.Name}}FilterType) {
     {{$obj.LowerName}}(id: $id, q: $search, filter: $filter) {
       ...{{$obj.PluralName}}Fields
     }
   }
+
   # 新增
-  mutation {{.Name}}Add ($data: {{.Name}}CreateInput!) {
-    create{{.Name}}(input: $data) {
+  mutation {{$obj.Name}}Add ($data: {{$obj.Name}}CreateInput!) {
+    create{{$obj.Name}}(input: $data) {
       ...{{$obj.PluralName}}Fields
     }
   }
 
   # 修改
-  mutation {{.Name}}Edit ($id: ID!, $data: {{.Name}}UpdateInput!) {
-    update{{.Name}}(id: $id, input: $data) {
+  mutation {{$obj.Name}}Edit ($id: ID!, $data: {{$obj.Name}}UpdateInput!) {
+    update{{$obj.Name}}(id: $id, input: $data) {
       ...{{$obj.PluralName}}Fields
     }
   }
 
   # 删除
-  mutation {{.Name}}Delete ($id: ID!) {
-    delete{{.Name}}(id: $id) {
+  mutation {{$obj.Name}}Delete ($id: ID!) {
+    delete{{$obj.Name}}(id: $id) {
       ...{{$obj.PluralName}}Fields
     }
   }
@@ -70,20 +73,23 @@ var GraphqlApi = `[{{range $obj := .Model.Objects}}
       {{end}}
     ],
     "data": [
-      { "title": "列表", "api": "{{$obj.LowerName}}s" },
-      { "title": "详情", "api": "{{$obj.LowerName}}" },
-      { "title": "新增", "api": "create{{$obj.Name}}" },
-      { "title": "修改", "api": "update{{$obj.Name}}" },
-      { "title": "删除", "api": "delete{{$obj.Name}}" }
+      { "title": "列表", "api": "{{$obj.LowerName}}s", "type": "query" },
+      { "title": "详情", "api": "{{$obj.LowerName}}", "type": "query" },
+      { "title": "新增", "api": "create{{$obj.Name}}", "type": "mutation" },
+      { "title": "修改", "api": "update{{$obj.Name}}", "type": "mutation" },
+      { "title": "删除", "api": "delete{{$obj.Name}}", "type": "mutation" }
     ]
   },
 {{end}}
 {{range $ext := .Model.ObjectExtensions}}{{$obj := $ext.Object}}{{range $col := $obj.Fields}}
   {
-    "title": "{{$col.Name}}",
+    "title": "{{$col.EntityName}}",
     "name": "{{$col.Name}}",
     "fields": [
-      {{$col.Fields}}    ]
+      {{$col.Fields}}    ],
+    "data": [
+      { "title": "提交", "api": "{{$col.Name}}", "type": "{{$obj.LowerName}}" },
+    ]
   },{{end}}
 {{end}}]
 `

@@ -337,10 +337,10 @@ func (o *ObjectField) Fields() string {
 
 // 表名
 func (o *ObjectField) EntityName() string {
-	// if len(o.Obj.Def.Directives[0].Arguments) > 0 {
-	// 	title := o.Obj.Def.Directives[0].Arguments[0].Value.GetValue()
-	// 	return title.(string)
-	// }
+	if len(o.Obj.Def.Directives) > 0 && len(o.Obj.Def.Directives[0].Arguments) > 0 {
+		title := o.Obj.Def.Directives[0].Arguments[0].Value.GetValue()
+		return title.(string)
+	}
 	return o.Name()
 }
 

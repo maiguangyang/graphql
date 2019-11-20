@@ -13,12 +13,12 @@ type Model struct {
 
 func (m *Model) Objects() []Object {
 	objs := []Object{}
-
 	for _, def := range m.Doc.Definitions {
 		def, ok := def.(*ast.ObjectDefinition)
 		if ok {
 			// for _, child := range def.Fields {
-			// 	fmt.Println(child.Name)
+			// 	nt := getNamedType(child.Type).(*ast.Named)
+			// 	fmt.Println(nt.Name.Value)
 			// }
 			// if len(def.Directives[0].Arguments) > 0 {
 			// 	fmt.Println(def.Directives[0].Arguments[0].Value.GetValue())
@@ -48,7 +48,7 @@ func (m *Model) ObjectExtensions() []ObjectExtension {
 		def, ok := def.(*ast.TypeExtensionDefinition)
 		if ok {
 			obj := &Object{Def: def.Definition, Model: m}
-			obj.Def.Directives = filterDirective(obj.Def.Directives, "entity")
+			// obj.Def.Directives = filterDirective(obj.Def.Directives, "entity")
 			// fmt.Println(def.Directives[0].Arguments[0].Value.GetValue())
 			// fmt.Println(def.Definition.Fields[0].Name)
 			// fmt.Println(obj.Def.Fields[0].Name.Value)

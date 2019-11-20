@@ -18,7 +18,7 @@ type Object struct {
 
 // maiguangyang add 表名
 func (o *Object) EntityName() string {
-	if len(o.Def.Directives[0].Arguments) > 0 {
+	if len(o.Def.Directives) > 0 && len(o.Def.Directives[0].Arguments) > 0 {
 		title := o.Def.Directives[0].Arguments[0].Value.GetValue()
 		return title.(string)
 	}
@@ -28,6 +28,7 @@ func (o *Object) EntityName() string {
 func (o *Object) Name() string {
 	return o.Def.Name.Value
 }
+
 func (o *Object) PluralName() string {
 	return inflection.Plural(o.Name())
 }
