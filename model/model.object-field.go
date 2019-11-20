@@ -286,9 +286,9 @@ func (o *ObjectField) Arguments() string {
 		v, ok := getNamedType(child.Type).(*ast.Named)
 		if ok {
 			if key != len(o.Obj.Def.Fields[0].Arguments) - 1 {
-				argString = argString + child.Name.Value + ": " + v.Name.Value + nullType + ", "
+				argString = argString + "$" + child.Name.Value + ": " + v.Name.Value + nullType + ", "
 			} else {
-				argString = argString + child.Name.Value + ": " + v.Name.Value + nullType
+				argString = argString + "$" + child.Name.Value + ": " + v.Name.Value + nullType
 			}
 		}
 	}
