@@ -4,7 +4,7 @@ var Sorting = `package gen
 
 import (
 	"context"
-	
+
 	"github.com/jinzhu/gorm"
 )
 
@@ -15,13 +15,13 @@ func (s {{$obj.Name}}SortType) Apply(ctx context.Context, dialect gorm.Dialect, 
 }
 func (s {{$obj.Name}}SortType) ApplyWithAlias(ctx context.Context, dialect gorm.Dialect, alias string, sorts *[]string, joins *[]string) error {
 	aliasPrefix := dialect.Quote(alias) + "."
-	
+
 	{{range $col := $obj.Columns}}{{if $col.IsSortable}}
 	if s.{{$col.MethodName}} != nil {
-		*sorts = append(*sorts, aliasPrefix+"{{$col.Name}} "+s.{{$col.MethodName}}.String())
+		*sorts = append(*sorts, aliasPrefix+SnakeString("{{$col.Name}} ")+s.{{$col.MethodName}}.String())
 	}
 	{{end}}{{end}}
-	
+
 	{{range $rel := $obj.Relationships}}
 	{{if not $rel.Target.IsExtended}}
 	{{$varName := (printf "s.%s" $rel.MethodName)}}
