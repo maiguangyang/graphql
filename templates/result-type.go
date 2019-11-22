@@ -114,17 +114,7 @@ func recurseSelectionSets(reqCtx *graphql.RequestContext, fields []string, selec
 }
 
 // 查找数组并返回下标
-// func indexOf(str []EntitySort, data string) int {
-//   for k, v := range str{
-//     if v.String() == data {
-//       return k
-//     }
-//   }
-//   return - 1
-// }
-
-// 查找数组并返回下标
-func IndexOfTwo(str []string, data interface{}) int {
+func IndexOf(str []string, data interface{}) int {
   for k, v := range str{
     if v == data {
       return k
@@ -145,7 +135,7 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, opts GetIte
 
 	// 麦广扬添加
 	selects := GetFieldsRequested(ctx, opts.Alias)
-	if len(selects) > 0 && IndexOfTwo(selects, opts.Alias + ".id") == -1 {
+	if len(selects) > 0 && IndexOf(selects, opts.Alias + ".id") == -1 {
 		selects = append(selects, opts.Alias + ".id")
 	}
 
@@ -168,35 +158,6 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, opts GetIte
 
 	dialect := q.Dialect()
 
-
-  // 以前是改写排序
- //  var _newSort []EntitySort
- //  // 判断是否有创建时间排序，没有的话，追加一个默认值
-	// if indexOf(r.Sort, "CREATED_AT_DESC") == -1 && indexOf(r.Sort, "CREATED_AT_ASC") == -1 {
- //    var created Created
- //    var _sort EntitySort = created
-
- //    _newSort = append(_newSort, _sort)
-	// }
-
- //  for _, v := range r.Sort {
- //    _newSort = append(_newSort, v)
- //  }
- //  r.Sort = _newSort
-
- //  // 原来的代码
-	// for _, s := range r.Sort {
-	// 	direction := "ASC"
-	// 	_s := s.String()
-	// 	if strings.HasSuffix(_s, "_DESC") {
-	// 		direction = "DESC"
-	// 	}
-
- //    // strcase.ToLowerCamel(
- //    col := strings.ToLower(strings.TrimSuffix(_s, "_"+direction))
- //    q = q.Order(opts.Alias + "." + dialect.Quote(col) + " " + direction)
-	// }
-
 	wheres := []string{}
 	values := []interface{}{}
 	joins := []string{}
@@ -216,6 +177,10 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, opts GetIte
 		if err != nil {
 			return err
 		}
+	}
+
+	if IndexOf(selects, opts.Alias+"created_at") == -1 {
+		sorts = append([]string{opts.Alias + ".created_at DESC"}, sorts...)
 	}
 
 	if len(sorts) > 0 {
