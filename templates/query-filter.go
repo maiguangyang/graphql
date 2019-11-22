@@ -11,6 +11,26 @@ import (
 	"github.com/vektah/gqlparser/ast"
 )
 
+// maiguangyang new add
+// 驼峰转蛇线
+func SnakeString(s string) string {
+  data := make([]byte, 0, len(s)*2)
+  j := false
+  num := len(s)
+  for i := 0; i < num; i++ {
+    d := s[i]
+    if i > 0 && d >= 'A' && d <= 'Z' && j {
+      data = append(data, '_')
+    }
+    if d != '_' {
+      j = true
+    }
+    data = append(data, d)
+  }
+  return strings.ToLower(string(data[:]))
+}
+
+
 {{range $object := .Model.ObjectEntities}}
 
 type {{$object.Name}}QueryFilter struct {
@@ -48,7 +68,7 @@ func (qf *{{$object.Name}}QueryFilter) applyQueryWithFields(dialect gorm.Dialect
 	if len(fields) == 0 {
 		return nil
 	}
-	
+
 	fieldsMap := map[string][]*ast.Field{}
 	for _, f := range fields {
 		fieldsMap[f.Name] = append(fieldsMap[f.Name],f)
@@ -57,13 +77,13 @@ func (qf *{{$object.Name}}QueryFilter) applyQueryWithFields(dialect gorm.Dialect
 	{{range $col := $object.Columns}}{{if $col.IsSearchable}}
 	if _, ok := fieldsMap["{{$col.Name}}"]; ok {
 		{{if $col.IsString}}
-			column := dialect.Quote(alias)+"."+dialect.Quote("{{$col.Name}}")
+			column := dialect.Quote(alias)+"."+SnakeString(dialect.Quote("{{$col.Name}}"))
 		{{else}}
 			cast := "TEXT"
 			if dialect.GetName() == "mysql" {
 				cast = "CHAR"
 			}
- 			column := fmt.Sprintf("CAST(%s"+dialect.Quote("{{$col.Name}}")+" AS %s)", dialect.Quote(alias)+".", cast)
+ 			column := fmt.Sprintf("CAST(%s"+SnakeString(dialect.Quote("{{$col.Name}}"))+" AS %s)", dialect.Quote(alias)+".", cast)
 		{{end}}
 		*ors = append(*ors, fmt.Sprintf("%[1]s LIKE ? OR %[1]s LIKE ?", column))
 		*values = append(*values, query+"%", "% "+query+"%")
@@ -76,7 +96,7 @@ func (qf *{{$object.Name}}QueryFilter) applyQueryWithFields(dialect gorm.Dialect
 		_fields := []*ast.Field{}
 		_alias := alias + "_{{$rel.Name}}"
 		*joins = append(*joins,{{$rel.JoinString}})
-		
+
 		for _, f := range fs {
 			for _, s := range f.SelectionSet {
 				if f, ok := s.(*ast.Field); ok {
@@ -91,7 +111,7 @@ func (qf *{{$object.Name}}QueryFilter) applyQueryWithFields(dialect gorm.Dialect
 		}
 	}
 	{{end}}
-	
+
 	return nil
 }
 
