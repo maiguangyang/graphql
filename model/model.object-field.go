@@ -360,7 +360,7 @@ func (o *ObjectField) ModelTags() string {
 	_gorm := fmt.Sprintf("default:null")
 	_valid := ""
 
-	dateArr := []interface{}{"createdAt", "updatedAt", "state", "del", "deletedBy", "updatedBy", "createdBy"}
+	dateArr := []interface{}{"createdAt", "updatedAt", "deletedAt", "state", "createdBy", "updatedBy", "deletedBy"}
 
 	if o.Name() == "id" {
 		_gorm = "type:varchar(36) comment 'uuid';primary_key;NOT NULL;"
@@ -377,23 +377,22 @@ func (o *ObjectField) ModelTags() string {
       case "updatedAt":
       	tye = "type:bigint(13)"
         comment = "'更新时间';default:null"
-      case "deletedBy":
-      	tye = "type:varchar(36)"
-        comment = "'删除人';default:null"
-      case "updatedBy":
-      	tye = "type:varchar(36)"
-        comment = "'更新人';default:null"
+      case "deletedAt":
+      	tye = "type:bigint(13)"
+        comment = "'删除时间';default:null"
       case "createdBy":
       	tye = "type:varchar(36)"
         comment = "'创建人';default:null"
+      case "updatedBy":
+      	tye = "type:varchar(36)"
+        comment = "'更新人';default:null"
+      case "deletedBy":
+      	tye = "type:varchar(36)"
+        comment = "'删除人';default:null"
       case "state":
       	tye = "type:int(2)"
         comment = "'状态：1/正常、2/禁用、3/下架';NOT NULL;default:1;"
         _valid = "required:true;type:state;"
-      case "del":
-      	tye = "type:int(2)"
-        comment = "'状态：1/正常、2/删除';NOT NULL;default:1;"
-        _valid = "required:true;type:noOrYes;"
     }
 
     _gorm = fmt.Sprintf("%s comment %s", tye, comment)

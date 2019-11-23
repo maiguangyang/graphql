@@ -44,11 +44,6 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		    input["state"] = 1
 		  }
 	  {{end}}
-	  {{if $col.IsDel}}
-		  if input["del"] == nil {
-		    input["del"] = 1
-		  }
-	  {{end}}
 	  {{end}}
 
 		var changes {{$obj.Name}}Changes
@@ -274,25 +269,25 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 			return
 		}
 
-	  // 2为删除
-	  var del int64 = 2
+		deletedAt      := now.UnixNano() / 1e6
 
-	  item.UpdatedBy  = principalID
-	  item.Del      	= &del
+		item.DeletedAt = &deletedAt
+		item.DeletedBy = principalID
+		item.UpdatedBy = principalID
 
 		event := events.NewEvent(events.EventMetadata{
 			Type:        events.EventTypeDeleted,
 			Entity:      "{{$obj.Name}}",
 			EntityID:    id,
-			Date:        now.UnixNano() / 1e6,
+			Date:        deletedAt,
 			PrincipalID: principalID,
 		})
 
-		err = tx.Delete(item, TableName("{{$obj.TableName}}") + ".id = ?", id).Error
-		if err != nil {
-			tx.Rollback()
-			return
-		}
+		// err = tx.Where(TableName("{{$obj.TableName}}") + ".id = ?", id).Delete(item).Error
+		// if err != nil {
+		// 	tx.Rollback()
+		// 	return
+		// }
 
 	  if err := tx.Save(item).Error; err != nil {
 	  	tx.Rollback()
@@ -302,7 +297,8 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		{{range $rel := .Relationships}}
 		{{if $rel.IsToMany}}
 		  {{$rel.Name}} := []{{$rel.TargetType}}{}
-		  if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}_id = ?", id).Update("del", del).Error; err != nil {
+		  // if err := tx.Where("{{$rel.InverseRelationshipName}}_id = ?", id).Delete(&{{$rel.Name}}).Error; err != nil {
+		  if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}_id = ?", id).Updates(&{{$rel.TargetType}}{DeletedAt: &deletedAt, UpdatedBy: principalID, DeletedBy: principalID}).Error; err != nil {
 		    tx.Rollback()
 		    return item, err
 		  }

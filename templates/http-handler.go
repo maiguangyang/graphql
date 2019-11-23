@@ -47,8 +47,10 @@ func GetHTTPServeMux(r ResolverRoot, db *DB) *mux.Router {
 
 	playgroundHandler := handler.Playground("GraphQL playground", "/graphql")
 	mux.HandleFunc("/graphql", func(res http.ResponseWriter, req *http.Request) {
+		claims, _ := getJWTClaims(req)
 		principalID := getCreatedBy(req, "admin")
-		ctx := context.WithValue(req.Context(), KeyPrincipalID, principalID)
+		ctx := context.WithValue(req.Context(), KeyJWTClaims, claims)
+		ctx = context.WithValue(ctx, KeyPrincipalID, principalID)
 		ctx = context.WithValue(ctx, KeyLoaders, loaders)
 		ctx = context.WithValue(ctx, KeyExecutableSchema, executableSchema)
 		req = req.WithContext(ctx)

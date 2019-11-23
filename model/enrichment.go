@@ -12,10 +12,10 @@ import (
 // EnrichModelObjects ...
 func EnrichModelObjects(m *Model) error {
 	id := columnDefinition("id", "ID", true)
+	state     := columnDefinition("state", "Int", false)
 	createdAt := columnDefinition("createdAt", "Int", true)
 	updatedAt := columnDefinition("updatedAt", "Int", false)
-	state     := columnDefinition("state", "Int", false)
-	del     	:= columnDefinition("del", "Int", false)
+	deletedAt := columnDefinition("deletedAt", "Int", false)
 	createdBy := columnDefinition("createdBy", "ID", false)
 	updatedBy := columnDefinition("updatedBy", "ID", false)
 	deletedBy := columnDefinition("deletedBy", "ID", false)
@@ -27,7 +27,7 @@ func EnrichModelObjects(m *Model) error {
 				o.Def.Fields = append(o.Def.Fields, columnDefinition(rel.Name()+"Id", "ID", false))
 			}
 		}
-		o.Def.Fields = append(o.Def.Fields, state, del, updatedAt, createdAt, deletedBy, updatedBy, createdBy)
+		o.Def.Fields = append(o.Def.Fields, state, deletedBy, updatedBy, createdBy, deletedAt, updatedAt, createdAt)
 	}
 	return nil
 }
