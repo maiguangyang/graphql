@@ -179,7 +179,15 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, opts GetIte
 		}
 	}
 
-	if IndexOf(selects, opts.Alias+"created_at") == -1 {
+	isAt := false
+
+	for _, s := range sorts {
+		if strings.Index(s, "_at") != -1 {
+			isAt = true
+		}
+	}
+
+	if isAt == false {
 		sorts = append([]string{opts.Alias + ".created_at DESC"}, sorts...)
 	}
 
