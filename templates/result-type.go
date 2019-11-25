@@ -195,7 +195,7 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, opts GetIte
 		q = q.Order(strings.Join(sorts, ", "))
 	}
 
- 	if len(wheres) > 0 && len(values) > 0 {
+ 	if len(wheres) > 0 {
 		q = q.Where(strings.Join(wheres, " AND "), values...)
 	}
 

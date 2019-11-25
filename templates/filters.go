@@ -30,7 +30,7 @@ func (f *{{$obj.Name}}FilterType) ApplyWithAlias(ctx context.Context, dialect go
 		return nil
 	}
 	aliasPrefix := dialect.Quote(alias) + "."
-	
+
 	_where, _values := f.WhereContent(dialect, aliasPrefix)
 	*wheres = append(*wheres, _where...)
 	*values = append(*values, _values...)
@@ -69,7 +69,7 @@ func (f *{{$obj.Name}}FilterType) ApplyWithAlias(ctx context.Context, dialect go
 		*values = append(*values, vs...)
 		*joins = append(*joins, js...)
 	}
-	
+
 	{{range $rel := $obj.Relationships}}
 	{{if not $rel.Target.IsExtended}}
 	{{$varName := (printf "f.%s" $rel.MethodName)}}
@@ -92,15 +92,15 @@ func (f *{{$obj.Name}}FilterType) WhereContent(dialect gorm.Dialect, aliasPrefix
 	{{range $col := $obj.Columns}}{{if $col.IsWritableType}}
 		{{range $fm := $col.FilterMapping}} {{$varName := (printf "f.%s%s" $col.MethodName $fm.SuffixCamel)}}
 			if {{$varName}} != nil {
-				conditions = append(conditions, aliasPrefix + dialect.Quote("{{$col.Name}}")+" {{$fm.Operator}}")
+				conditions = append(conditions, aliasPrefix + dialect.Quote(SnakeString("{{$col.Name}}"))+" {{$fm.Operator}}")
 				values = append(values, {{$fm.WrapValueVariable $varName}})
 			}
 		{{end}}
 		if f.{{$col.MethodName}}Null != nil {
 			if *f.{{$col.MethodName}}Null {
-				conditions = append(conditions, aliasPrefix+dialect.Quote("{{$col.Name}}")+" IS NULL")
+				conditions = append(conditions, aliasPrefix+dialect.Quote(SnakeString("{{$col.Name}}"))+" IS NULL")
 			} else {
-				conditions = append(conditions, aliasPrefix+dialect.Quote("{{$col.Name}}")+" IS NOT NULL")
+				conditions = append(conditions, aliasPrefix+dialect.Quote(SnakeString("{{$col.Name}}"))+" IS NOT NULL")
 			}
 		}
 	{{end}}
