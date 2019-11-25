@@ -4,10 +4,7 @@ var Graphql = `{{range $obj := .Model.Objects}}
   # {{$obj.EntityName}} {{$obj.Name}} 接口字段
   fragment {{$obj.PluralName}}Fields on {{$obj.Name}} {
     {{range $col := $obj.Columns}}{{$col.Name}}
-    {{end}}{{range $rel := $obj.Relationships}}{{if $rel.IsToMany}}{{$rel.Name}} {
-      ...{{$rel.Target.Name}}sFields
-    }
-    {{end}}{{end}}
+    {{end}}
   }
 
   # 列表
@@ -30,7 +27,11 @@ var Graphql = `{{range $obj := .Model.Objects}}
   # 详情
   query {{$obj.Name}}Detail ($id: ID, $search: String, $filter: {{$obj.Name}}FilterType) {
     {{$obj.LowerName}}(id: $id, q: $search, filter: $filter) {
-      ...{{$obj.PluralName}}Fields
+      {{range $col := $obj.Columns}}{{$col.Name}}
+      {{end}}{{range $rel := $obj.Relationships}}{{if $rel.IsToMany}}{{$rel.Name}} {
+        ...{{$rel.Target.Name}}sFields
+      }
+      {{end}}{{end}}
     }
   }
 
