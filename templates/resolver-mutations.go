@@ -295,7 +295,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 	  }
 
 		{{range $rel := .Relationships}}
-		{{if $rel.IsToMany}}
+		{{if $rel.IsManyToOne}}
 		  {{$rel.Name}} := []{{$rel.TargetType}}{}
 		  // if err := tx.Where("{{$rel.InverseRelationshipName}}_id = ?", id).Delete(&{{$rel.Name}}).Error; err != nil {
 		  if err := tx.Model(&{{$rel.Name}}).Where("{{$rel.InverseRelationshipName}}_id = ?", id).Updates(&{{$rel.TargetType}}{DeletedAt: &deletedAt, UpdatedBy: principalID, DeletedBy: principalID}).Error; err != nil {
