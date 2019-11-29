@@ -89,7 +89,7 @@ var GraphqlApi = `[{{range $obj := .Model.Objects}}
     "fields": [
       {{$col.Fields}}    ],
     "data": [
-      { "title": "提交", "api": "{{$col.Name}}", "type": "{{$obj.LowerName}}" },
+      { "title": "详情", "api": "{{$col.Name}}", "type": "{{$obj.LowerName}}" },
     ]
   },{{end}}
 {{end}}]
