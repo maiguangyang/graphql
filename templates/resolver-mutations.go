@@ -60,7 +60,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 			}
 		{{end}}{{end}}
 
-	  errText, repeat, resErr := utils.Validator(item, "create")
+	  errText, repeat, resErr := utils.Validator(item, "create", event.Changes)
 	  if resErr != nil {
 	    return item, &errText
 	  }
@@ -162,6 +162,10 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 			return
 		}
 
+    if err = GetItem(ctx, tx, item, &id); err != nil {
+      return
+    }
+
 		{{range $col := .Columns}}{{if $col.IsUpdatable}}
 			if _, ok := input["{{$col.Name}}"]; ok && (item.{{$col.MethodName}} != changes.{{$col.MethodName}}){{if $col.IsOptional}} && (item.{{$col.MethodName}} == nil || changes.{{$col.MethodName}} == nil || *item.{{$col.MethodName}} != *changes.{{$col.MethodName}}){{end}} {
 				event.AddOldValue("{{$col.Name}}", item.{{$col.MethodName}})
@@ -171,7 +175,7 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
 		{{end}}
 		{{end}}
 
-	  errText, repeat, resErr := utils.Validator(item, "update")
+	  errText, repeat, resErr := utils.Validator(item, "update", event.Changes)
 	  if resErr != nil {
 	    return item, &errText
 	  }
@@ -226,11 +230,6 @@ type GeneratedMutationResolver struct{ *GeneratedResolver }
       {{end}}
 		{{end}}{{end}}
 		{{end}}
-
-    if err := GetItem(ctx, tx, item, &id); err != nil {
-      tx.Rollback()
-      return item, err
-    }
 
 		err = tx.Commit().Error
 		if err != nil {

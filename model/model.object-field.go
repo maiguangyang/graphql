@@ -361,6 +361,7 @@ func (o *ObjectField) ModelTags() string {
 	_valid := ""
 
 	dateArr := []interface{}{"createdAt", "updatedAt", "deletedAt", "state", "createdBy", "updatedBy", "deletedBy"}
+	fields := []interface{}{"required", "type", "repeat", "edit"}
 
 	if o.Name() == "id" {
 		_gorm = "type:varchar(36) comment 'uuid';primary_key;NOT NULL;"
@@ -408,9 +409,12 @@ func (o *ObjectField) ModelTags() string {
 			}
 		} else if d.Name.Value == "validator" {
 			for _, arg := range d.Arguments {
-				if arg.Name.Value == "required" && arg.Value.GetValue() != nil || arg.Name.Value == "type" && arg.Value.GetValue() != nil || arg.Name.Value == "repeat" && arg.Value.GetValue() != nil {
+				if arg.Value.GetValue() != nil && IndexOf(fields, arg.Name.Value) != -1 {
 					_valid += fmt.Sprintf("%v", arg.Name.Value + ":" + arg.Value.GetValue().(string) + ";")
 				}
+				// if arg.Name.Value == "required" && arg.Value.GetValue() != nil || arg.Name.Value == "type" && arg.Value.GetValue() != nil || arg.Name.Value == "repeat" && arg.Value.GetValue() != nil {
+				// 	_valid += fmt.Sprintf("%v", arg.Name.Value + ":" + arg.Value.GetValue().(string) + ";")
+				// }
 			}
 		}
 	}
