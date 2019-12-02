@@ -188,7 +188,8 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, opts GetIte
 	}
 
 	if isAt == false {
-		sorts = append([]string{opts.Alias + ".created_at DESC"}, sorts...)
+		// sorts = append([]string{opts.Alias + ".created_at DESC"}, sorts...)
+		sorts = append(sorts, opts.Alias + ".created_at DESC")
 	}
 
 	if len(sorts) > 0 {
