@@ -88,30 +88,16 @@ func recurseSelectionSets(reqCtx *graphql.RequestContext, fields []string, selec
 	for _, sel := range selection {
 		switch sel := sel.(type) {
 		case *ast.Field:
-
-      if len(sel.ObjectDefinition.Fields) > 0 {
-  			for _, child := range sel.ObjectDefinition.Fields {
-          // fmt.Println("child:", child.Name, child.Type.Elem == nil, child.Type.Elem, child.Type.Name(), child.Type.String())
-          if child.Type.Elem == nil &&  child.Name != "assignee" && strings.Index(sel.Name, "Ids") == -1 && IndexOf(goTypeMap, child.Type.Name()) != -1 {
-            fields = append(fields, alias + "." + snakeString(child.Name))
-          }
-  			}
-      }
-			// ignore private field names !strings.HasPrefix(sel.Name, "__") &&
-			if !strings.HasPrefix(sel.Name, "__") && len(sel.SelectionSet) == 0 && strings.Index(sel.Name, "Ids") == -1 {
-				fields = append(fields, alias + "." + snakeString(sel.Name))
+			if !strings.HasPrefix(sel.Name, "__") && len(sel.SelectionSet) == 0 && strings.Index(sel.Name, "Ids") == -1 && IndexOf(goTypeMap, sel.Definition.Type.Name()) != -1 {
+				fields = append(fields, alias+"."+snakeString(sel.Name))
 			}
-      // else if (len(sel.SelectionSet) > 0) {
-			// 	fields = append(fields, alias + "." + sel.Name)
-			// }
-		// case *ast.InlineFragment:
-		// 	fields = recurseSelectionSets(reqCtx, fields, sel.SelectionSet)
-		// case *ast.FragmentSpread:
-
-		// 	fragment := reqCtx.Doc.Fragments.ForName(sel.Name)
-		// 	fields = recurseSelectionSets(reqCtx, fields, fragment.SelectionSet)
 		}
 	}
+
+	if len(fields) <= 0 {
+		fields = append(fields, "*")
+	}
+
 	return fields
 }
 

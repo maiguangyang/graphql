@@ -12,10 +12,10 @@ var Graphql = `{{range $obj := .Model.Objects}}
     {{$obj.LowerName}}s(current_page: $currentPage, per_page: $perPage, sort: $sort, q: $search, filter: $filter) {
       data {
         {{range $col := $obj.Columns}}{{$col.Name}}
-        {{end}}{{range $rel := $obj.Relationships}}{{if $rel.IsToMany}}{{$rel.Name}} {
+        {{end}}{{range $rel := $obj.Relationships}}{{$rel.Name}} {
           ...{{$rel.Target.Name}}sFields
         }
-        {{end}}{{end}}
+        {{end}}
       }
       current_page
       per_page
@@ -70,7 +70,7 @@ var GraphqlApi = `[{{range $obj := .Model.Objects}}
     "name": "{{$obj.LowerName}}",
     "fields": [
       {{range $col := $obj.Columns}}{ "name": "{{$col.Name}}", "desc": "{{$col.GetComment}}", "type": "{{$col.GetType}}", "required": "{{$col.IsRequired}}", "validator": "{{$col.GetValidator}}", "remark": "{{$col.GetRemark}}" },
-      {{end}}{{range $rel := $obj.Relationships}}{{if $rel.IsToMany}}{ "name": "{{$rel.Name}}", "desc": "{{$rel.Target.Name}}连表查询", "type": "relationship", "required": "", "validator": "", "remark": "{{$rel.LowerName}}" },{{end}}
+      {{end}}{{range $rel := $obj.Relationships}}{ "name": "{{$rel.Name}}", "desc": "{{$rel.Target.Name}}连表查询", "type": "relationship", "required": "", "validator": "", "remark": "{{$rel.LowerName}}" },
       {{end}}
     ],
     "data": [
