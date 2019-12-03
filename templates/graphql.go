@@ -28,10 +28,10 @@ var Graphql = `{{range $obj := .Model.Objects}}
   query {{$obj.Name}}Detail ($id: ID, $search: String, $filter: {{$obj.Name}}FilterType) {
     {{$obj.LowerName}}(id: $id, q: $search, filter: $filter) {
       {{range $col := $obj.Columns}}{{$col.Name}}
-      {{end}}{{range $rel := $obj.Relationships}}{{if $rel.IsToMany}}{{$rel.Name}} {
+      {{end}}{{range $rel := $obj.Relationships}}{{$rel.Name}} {
         ...{{$rel.Target.Name}}sFields
       }
-      {{end}}{{end}}
+      {{end}}
     }
   }
 
@@ -64,33 +64,33 @@ var Graphql = `{{range $obj := .Model.Objects}}
   }{{end}}{{end}}
 `
 
-var GraphqlApi = `[{{range $obj := .Model.Objects}}
+var GraphqlApi = `export default [{{range $obj := .Model.Objects}}
   {
-    "title": "{{$obj.EntityName}}",
-    "name": "{{$obj.LowerName}}",
-    "fields": [
-      {{range $col := $obj.Columns}}{ "name": "{{$col.Name}}", "desc": "{{$col.GetComment}}", "type": "{{$col.GetType}}", "required": "{{$col.IsRequired}}", "validator": "{{$col.GetValidator}}", "remark": "{{$col.GetRemark}}" },
-      {{end}}{{range $rel := $obj.Relationships}}{ "name": "{{$rel.Name}}", "desc": "{{$rel.Target.Name}}连表查询", "type": "relationship", "required": "", "validator": "", "remark": "{{$rel.LowerName}}" },
+    title: '{{$obj.EntityName}}',
+    name: '{{$obj.LowerName}}',
+    fields: [
+      {{range $col := $obj.Columns}}{ name: '{{$col.Name}}', desc: '{{$col.GetComment}}', type: '{{$col.GetType}}', required: '{{$col.IsRequired}}', validator: '{{$col.GetValidator}}', remark: '{{$col.GetRemark}}' },
+      {{end}}{{range $rel := $obj.Relationships}}{ name: '{{$rel.Name}}', desc: '{{$rel.Target.Name}}连表查询', type: 'relationship', required: '', validator: '', remark: '{{$rel.LowerName}}' },
       {{end}}
     ],
-    "data": [
-      { "title": "列表", "api": "{{$obj.LowerName}}s", "type": "query" },
-      { "title": "详情", "api": "{{$obj.LowerName}}", "type": "query" },
-      { "title": "新增", "api": "create{{$obj.Name}}", "type": "mutation" },
-      { "title": "修改", "api": "update{{$obj.Name}}", "type": "mutation" },
-      { "title": "删除", "api": "delete{{$obj.Name}}", "type": "mutation" }
-    ]
+    data: [
+      { title: '列表', api: '{{$obj.LowerName}}s', type: 'query' },
+      { title: '详情', api: '{{$obj.LowerName}}', type: 'query' },
+      { title: '新增', api: 'create{{$obj.Name}}', type: 'mutation' },
+      { title: '修改', api: 'update{{$obj.Name}}', type: 'mutation' },
+      { title: '删除', api: 'delete{{$obj.Name}}', type: 'mutation' },
+    ],
   },
 {{end}}
 {{range $ext := .Model.ObjectExtensions}}{{$obj := $ext.Object}}{{range $col := $obj.Fields}}
   {
-    "title": "{{$col.EntityName}}",
-    "name": "{{$col.Name}}",
-    "fields": [
+    title: '{{$col.EntityName}}',
+    name: '{{$col.Name}}',
+    fields: [
       {{$col.Fields}}    ],
-    "data": [
-      { "title": "详情", "api": "{{$col.Name}}", "type": "{{$obj.LowerName}}" },
-    ]
+    data: [
+      { title: '详情', api: '{{$col.Name}}', type: '{{$obj.LowerName}}' },
+    ],
   },{{end}}
-{{end}}]
+{{end}}];
 `

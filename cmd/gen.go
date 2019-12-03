@@ -150,7 +150,7 @@ func generateInterface(p string, m *model.Model, c *model.Config) error {
 // 生成前端接口接口文档
 func generateInterfaceDocument(p string, m *model.Model, c *model.Config) error {
   data := templates.TemplateData{Model: m, Config: c}
-  return templates.WriteInterfaceTemplate(templates.GraphqlApi, path.Join(p, "graphql/api.json"), data)
+  return templates.WriteInterfaceTemplate(templates.GraphqlApi, path.Join(p, "graphql/apiFile.js"), data)
 }
 
 func generateFiles(p string, m *model.Model, c *model.Config) error {

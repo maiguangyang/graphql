@@ -325,9 +325,9 @@ func (o *ObjectField) Fields() string {
 		v, ok := getNamedType(child.Type).(*ast.Named)
 		if ok {
 			if key != len(o.Obj.Def.Fields[0].Arguments) - 1 {
-				argString = argString + `{ "name": "` + child.Name.Value + `", "desc": "` + child.Name.Value + `", "type": "` + v.Name.Value + `", "required": "` + nullType + `", "validator": "", "remark": "" },` + "\n      "
+				argString = argString + `{ name: '` + child.Name.Value + `', desc: '` + child.Name.Value + `', type: '` + v.Name.Value + `', required: '` + nullType + `', validator: '', remark: '' },` + "\n      "
 			} else {
-				argString = argString + `{ "name": "` + child.Name.Value + `", "desc": "` + child.Name.Value + `", "type": "` + v.Name.Value + `", "required": "` + nullType + `", "validator": "", "remark": "" }` + "\n"
+				argString = argString + `{ name: '` + child.Name.Value + `', desc: '` + child.Name.Value + `', type: '` + v.Name.Value + `', required: '` + nullType + `', validator: '', remark: '' },` + "\n"
 			}
 		}
 	}
