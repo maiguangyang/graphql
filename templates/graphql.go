@@ -91,7 +91,7 @@ var GraphqlApi = `export default [{{range $obj := .Model.Objects}}
     fields: [
       {{$col.Fields}}    ],
     data: [
-      { title: '详情', api: '{{$col.Name}}', type: 'list', method: '{{$obj.LowerName}}' },
+      { title: '详情', api: '{{$col.Name}}', type: 'detail', method: '{{$obj.LowerName}}' },
     ],
   },{{end}}
 {{end}}];
