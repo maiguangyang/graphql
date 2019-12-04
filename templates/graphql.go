@@ -60,7 +60,10 @@ var Graphql = `{{range $obj := .Model.Objects}}
   {{range $col := $obj.Fields}}
   # {{$col.LowerName}} 接口
   {{$obj.LowerName}} {{$col.LowerName}} {{$col.Arguments}}{
-    {{$col.Name}}{{$col.Inputs}}
+    {{$col.Name}}{{$col.Inputs}}{{if $col.IsReadonlyType}} {
+      ...{{$col.TargetType}}sFields
+    }
+    {{end}}
   }{{end}}{{end}}
 `
 
