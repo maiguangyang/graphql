@@ -67,18 +67,19 @@ var Graphql = `{{range $obj := .Model.Objects}}
 var GraphqlApi = `export default [{{range $obj := .Model.Objects}}
   {
     title: '{{$obj.EntityName}}',
-    name: '{{$obj.LowerName}}',
+    name: '{{$obj.LowerName}}s',
+    type: 0,
     fields: [
       {{range $col := $obj.Columns}}{ name: '{{$col.Name}}', desc: '{{$col.GetComment}}', type: '{{$col.GetType}}', required: '{{$col.IsRequired}}', validator: '{{$col.GetValidator}}', remark: '{{$col.GetRemark}}' },
       {{end}}{{range $rel := $obj.Relationships}}{ name: '{{$rel.Name}}', desc: '{{$rel.Target.Name}}连表查询', type: 'relationship', required: '', validator: '', remark: '{{$rel.LowerName}}' },
       {{end}}
     ],
     data: [
-      { title: '列表', api: '{{$obj.LowerName}}s', type: 'query' },
-      { title: '详情', api: '{{$obj.LowerName}}', type: 'query' },
-      { title: '新增', api: 'create{{$obj.Name}}', type: 'mutation' },
-      { title: '修改', api: 'update{{$obj.Name}}', type: 'mutation' },
-      { title: '删除', api: 'delete{{$obj.Name}}', type: 'mutation' },
+      { title: '列表', api: '{{$obj.LowerName}}s', type: 'list', method: 'query' },
+      { title: '详情', api: '{{$obj.LowerName}}', type: 'detail', method: 'query' },
+      { title: '新增', api: 'create{{$obj.Name}}', type: 'add', method: 'mutation' },
+      { title: '修改', api: 'update{{$obj.Name}}', type: 'edit', method: 'mutation' },
+      { title: '删除', api: 'delete{{$obj.Name}}', type: 'delete', method: 'mutation' },
     ],
   },
 {{end}}
@@ -86,10 +87,11 @@ var GraphqlApi = `export default [{{range $obj := .Model.Objects}}
   {
     title: '{{$col.EntityName}}',
     name: '{{$col.Name}}',
+    type: 1,
     fields: [
       {{$col.Fields}}    ],
     data: [
-      { title: '详情', api: '{{$col.Name}}', type: '{{$obj.LowerName}}' },
+      { title: '详情', api: '{{$col.Name}}', type: 'list', method: '{{$obj.LowerName}}' },
     ],
   },{{end}}
 {{end}}];
