@@ -293,6 +293,9 @@ func (o *ObjectField) Arguments() string {
 		}
 	}
 
+	if argString != "" {
+		argString = "(" + argString + ")"
+	}
 	return argString
 }
 
@@ -308,10 +311,14 @@ func (o *ObjectField) Inputs() string {
 		}
 	}
 
+	if argString != "" {
+		argString = "(" + argString + ")"
+	}
+
 	return argString
 }
 
-// 获取Input
+// 获取Field
 func (o *ObjectField) Fields() string {
 	argString := ""
 	// { "name": "", "desc": "", "type": "", "required": "", "validator": "", "remark": "" },

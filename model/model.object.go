@@ -41,6 +41,18 @@ func (o *Object) TableName() string {
 func (o *Object) HasColumn(name string) bool {
 	return o.Column(name) != nil
 }
+// Extend
+func (o *Object) HasExtendColumns() bool {
+	fmt.Println(o.LowerName())
+	// model := o.Model
+	// for _, f := range model.Objects() {
+	// 	for _, v := range f.ExtendColumns() {
+	// 		fmt.Println(v.Name())
+	// 	}
+	// }
+
+	return len(o.Columns()) > 0
+}
 func (o *Object) HasField(name string) bool {
 	return o.Field(name) != nil
 }
@@ -64,9 +76,30 @@ func (o *Object) Columns() []ObjectField {
 			columns = append(columns, f)
 		}
 	}
+
 	return columns
 }
+func (o *Object) ExtendColumns() []ObjectField {
+	columns := []ObjectField{}
+	model := o.Model
+	for _, ext := range model.ObjectExtensions() {
+		obj := ext.Object
+		for _, v := range obj.Fields() {
+		fmt.Println(v.Name())
 
+			if v.IsColumn() {
+				columns = append(columns, v)
+			}
+		}
+	}
+
+	// for _, f := range o.Fields() {
+	// 	if f.IsColumn() {
+	// 		columns = append(columns, f)
+	// 	}
+	// }
+	return columns
+}
 func (o *Object) Field(name string) *ObjectField {
 	for _, f := range o.Def.Fields {
 		if f.Name.Value == name {

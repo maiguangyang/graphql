@@ -59,8 +59,8 @@ var Graphql = `{{range $obj := .Model.Objects}}
 {{range $ext := .Model.ObjectExtensions}}{{$obj := $ext.Object}}
   {{range $col := $obj.Fields}}
   # {{$col.LowerName}} 接口
-  {{$obj.LowerName}} {{$col.LowerName}} ({{$col.Arguments}}) {
-    {{$col.Name}}({{$col.Inputs}})
+  {{$obj.LowerName}} {{$col.LowerName}} {{$col.Arguments}}{
+    {{$col.Name}}{{$col.Inputs}}
   }{{end}}{{end}}
 `
 
