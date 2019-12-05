@@ -371,7 +371,7 @@ func (o *ObjectField) ModelTags() string {
 	_gorm := fmt.Sprintf("default:null")
 	_valid := ""
 
-	dateArr := []interface{}{"createdAt", "updatedAt", "deletedAt", "state", "createdBy", "updatedBy", "deletedBy"}
+	dateArr := []interface{}{"createdAt", "updatedAt", "deletedAt", "weight", "state", "createdBy", "updatedBy", "deletedBy"}
 	fields := []interface{}{"required", "type", "repeat", "edit"}
 
 	if o.Name() == "id" {
@@ -401,6 +401,10 @@ func (o *ObjectField) ModelTags() string {
       case "deletedBy":
       	tye = "type:varchar(36)"
         comment = "'删除人';default:null"
+      case "weight":
+      	tye = "type:int(11)"
+        comment = "'权重：用来排序';NOT NULL;default:0;"
+        _valid = "type:int;"
       case "state":
       	tye = "type:int(2)"
         comment = "'状态：1/正常、2/禁用、3/下架';NOT NULL;default:1;"
