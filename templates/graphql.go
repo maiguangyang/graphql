@@ -59,11 +59,18 @@ var Graphql = `{{range $obj := .Model.Objects}}
 {{range $ext := .Model.ObjectExtensions}}{{$obj := $ext.Object}}
   {{range $col := $obj.Fields}}
   # {{$col.LowerName}} 接口
-  {{$obj.LowerName}} {{$col.LowerName}} {{$col.Arguments}}{
+  {{$obj.LowerName}} {{$col.LowerName}}{{$col.Arguments}} {
     {{$col.Name}}{{$col.Inputs}}{{if $col.IsReadonlyType}} {
-      ...{{$col.TargetType}}sFields
-    }
-    {{end}}
+      ...{{$col.TargetType}}sFields{{if $col.TargetObject.HasAnyRelationships}}
+      {{range $rol := $col.TargetObject.Relationships}}
+      {{$rol.Name}} {
+        {{range $rel := $rol.Target.Columns}}{{$rel.Name}}
+        {{end}}{{range $oRel := $rol.Target.Relationships}}{{$oRel.Name}} {
+          ...{{$oRel.Target.Name}}sFields
+        }
+        {{end}}
+      }{{end}}{{end}}
+    }{{end}}
   }{{end}}{{end}}
 `
 

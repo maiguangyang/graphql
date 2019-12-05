@@ -36,6 +36,10 @@ func (o *ObjectField) LowerName() string {
   }
   return strcase.ToLowerCamel(o.Name())
 }
+func (o *ObjectField) Columns() []ObjectField {
+	obj := o.TargetObject().Columns();
+	return obj
+}
 func (o *ObjectField) TargetType() string {
 	nt := getNamedType(o.Def.Type).(*ast.Named)
 	return nt.Name.Value

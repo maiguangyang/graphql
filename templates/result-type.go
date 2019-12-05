@@ -206,7 +206,7 @@ func (r *EntityResultType) GetData(ctx context.Context, db *gorm.DB, opts GetIte
 			q = q.Preload(p)
 		}
 	}
-	q = q.Group(opts.Alias + ".id")
+	// q = q.Group(opts.Alias + ".id")
 	return q.Find(out).Error
 }
 

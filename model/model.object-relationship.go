@@ -75,6 +75,7 @@ func (o *ObjectRelationship) Preload() bool {
 
 func (o *ObjectRelationship) Target() *Object {
 	target := o.Obj.Model.Object(o.TargetType())
+	fmt.Println(target)
 	return &target
 }
 func (o *ObjectRelationship) InverseRelationship() *ObjectRelationship {
