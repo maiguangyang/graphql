@@ -355,6 +355,15 @@ func (o *ObjectField) EntityName() string {
 	return o.Name()
 }
 
+// 获取是否默认显示
+func (o *ObjectField) GetDefault() string {
+	if len(o.Obj.Def.Directives) > 0 && len(o.Obj.Def.Directives[0].Arguments) > 0 {
+		title := o.Obj.Def.Directives[0].Arguments[1].Value.GetValue()
+		return title.(string)
+	}
+	return "0"
+}
+
 // 查找数组并返回下标
 func IndexOf(str []interface{}, data interface{}) int {
   for k, v := range str{

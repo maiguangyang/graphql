@@ -98,6 +98,7 @@ var GraphqlApi = `export default [{{range $obj := .Model.Objects}}
     title: '{{$col.EntityName}}',
     name: '{{$col.Name}}',
     type: 1,
+    default: {{$col.GetDefault}},
     fields: [
       {{$col.Fields}}    ],
     data: [
